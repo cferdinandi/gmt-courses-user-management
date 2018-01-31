@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.0.1
+ * Version: 0.0.2
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -41,6 +41,36 @@
 			));
 		}
 
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'message' => 'The user is logged in'
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
+	add_action('wp_ajax_nopriv_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
+
+
+	/**
+	 * Get the courses an already logged in user has access to
+	 */
+	function gmt_courses_get_courses () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		if (!is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re not logged in yet.'
+			));
+		}
+
 		// Get user purchases
 		$user = wp_get_current_user();
 		$courses = gmt_courses_get_user_courses($user->user_email);
@@ -56,8 +86,8 @@
 		));
 
 	}
-	add_action('wp_ajax_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
-	add_action('wp_ajax_nopriv_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
+	add_action('wp_ajax_gmt_courses_get_courses', 'gmt_courses_get_courses');
+	add_action('wp_ajax_nopriv_gmt_courses_get_courses', 'gmt_courses_get_courses');
 
 
 	/**
@@ -70,6 +100,15 @@
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
 			header('Location: ' . $_SERVER['HTTP_REFERER']);
 			return;
+		}
+
+		// Make sure user isn't already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
 		}
 
 		// Authenticate User
@@ -89,17 +128,11 @@
 			));
 		}
 
-		// Get user purchases
-		$courses = gmt_courses_get_user_courses($_POST['username']);
-
-		// Send data back
+		// Send success message
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'data' => array(
-				'email' => $_POST['username'],
-				'data' => $courses
-			)
+			'message' => 'The user is logged in.'
 		));
 
 	}
@@ -142,6 +175,15 @@
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
 			header('Location: ' . $_SERVER['HTTP_REFERER']);
 			return;
+		}
+
+		// Bail if user is already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
 		}
 
 		// Get user purchases
@@ -218,6 +260,15 @@
 			return;
 		}
 
+		// Bail if user is already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
+		}
+
 		// Variables
 		$user = get_user_by('email', $_POST['username']);
 		$validation = get_transient('validate_user_' . $_POST['username']);
@@ -252,6 +303,15 @@
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
 			header('Location: ' . $_SERVER['HTTP_REFERER']);
 			return;
+		}
+
+		// Bail if user is already logged in
+		if (!is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You need to be logged in to change your password.'
+			));
 		}
 
 		// Get the current user
