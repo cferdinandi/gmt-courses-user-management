@@ -9,50 +9,56 @@
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
+ *
+ * Notes and references:
+ * - https://codex.wordpress.org/Function_Reference/wp_send_json
+ * - https://codex.wordpress.org/AJAX_in_Plugins
+ * - https://www.smashingmagazine.com/2011/10/how-to-use-ajax-in-wordpress/
  */
 
-
-	// @notes
-	// * Use wp_send_json() - https://codex.wordpress.org/Function_Reference/wp_send_json
-	// * Use the WP Ajax functionality for this?
-	// 		- https://codex.wordpress.org/AJAX_in_Plugins
-	// 		- https://www.smashingmagazine.com/2011/10/how-to-use-ajax-in-wordpress/
-	// 		- endpoint: /wp-admin/admin-ajax.php
-
-	function test_thing () {
-
-		if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-			$courses = json_decode(file_get_contents(ABSPATH . '/testing/course-data.json', true));
-			wp_send_json($courses);
-		}
-		else {
-			header('Location: ' . $_SERVER['HTTP_REFERER']);
-		}
-
-		// echo wp_send_json(array('chicken', 'beef'));
-
-	}
-	add_action('wp_ajax_test_thing', 'test_thing');
-	add_action('wp_ajax_nopriv_test_thing', 'test_thing');
-
-	// atomic.ajax({
-	// 	type: 'POST',
-	// 	url: 'http://localhost:8888/go-make-things-courses-backend/wp-admin/admin-ajax.php',
-	// 	headers: {
-	// 		'X-Requested-With': 'XMLHttpRequest'
-	// },
-	// 	data: {
-	// 		action: 'test_thing',
-	// 		fake: 'thing 1'
-	// 	}
-	// }).success(function (data, xhr) {
-	// 	console.log(data);
-	// });
 
 
 	//
 	// AJAX Methods
 	//
+
+	/**
+	 * Check if the user is logged in
+	 */
+	function gmt_courses_is_logged_in () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		if (!is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Not logged in.'
+			));
+		}
+
+		// Get user purchases
+		$user = wp_get_current_user();
+		$courses = gmt_courses_get_user_courses($user->user_email);
+
+		// Send data back
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'data' => array(
+				'email' => $user->user_email,
+				'data' => $courses
+			)
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
+	add_action('wp_ajax_nopriv_gmt_courses_is_logged_in', 'gmt_courses_is_logged_in');
+
 
 	/**
 	 * Log the user in via an Ajax call
@@ -114,6 +120,13 @@
 
 		// Log the user out
 		wp_logout();
+
+		// Send confirmation
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'message' => 'You have been logged out.'
+		));
 
 	}
 	add_action('wp_ajax_gmt_courses_logout', 'gmt_courses_logout');
@@ -318,13 +331,17 @@
 		$checkout_pw = getenv('CHECKOUT_PW');
 
 		// Get user purchases
-		return wp_remote_request(
-			rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users/' . $email,
-			array(
-				'method'    => 'GET',
-				'headers'   => array(
-					'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
-				),
+		return json_decode(
+			wp_remote_retrieve_body(
+				wp_remote_request(
+					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users/' . $email,
+					array(
+						'method'    => 'GET',
+						'headers'   => array(
+							'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
+						),
+					)
+				)
 			)
 		);
 
@@ -341,7 +358,7 @@
 		if (empty($purchases)) return;
 
 		// Get course data and remove courses the user doesn't have access to
-		$courses = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . $course_data, true));
+		$courses = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($course_data, '/'), true));
 		foreach ($courses->courses as $key => $course) {
 			if (in_array($course->id, $purchases)) continue;
 			unset($courses->courses[$key]);
