@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.0.2
+ * Version: 0.0.3
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -15,7 +15,6 @@
  * - https://codex.wordpress.org/AJAX_in_Plugins
  * - https://www.smashingmagazine.com/2011/10/how-to-use-ajax-in-wordpress/
  */
-
 
 
 	//
@@ -33,6 +32,7 @@
 			return;
 		}
 
+		// If the user is not logged in
 		if (!is_user_logged_in()) {
 			wp_send_json(array(
 				'code' => 401,
@@ -41,10 +41,14 @@
 			));
 		}
 
+		// Get the current user's email
+		$user = wp_get_current_user();
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'The user is logged in'
+			'data' => array(
+				'email' => $user->user_email
+			)
 		));
 
 	}
@@ -108,6 +112,16 @@
 				'code' => 401,
 				'status' => 'failed',
 				'message' => 'You\'re already logged in.'
+			));
+		}
+
+		// Make sure account has been validated
+		$user = get_user_by('email', $_POST['username']);
+		if (!empty(get_user_meta($user->ID, 'user_validation_key', true))) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please validate your account using the link in the email that was sent to you. If you never received a validation link, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
 			));
 		}
 
@@ -190,11 +204,11 @@
 		$courses = gmt_courses_get_user_courses($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($purchases) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($courses) || empty($courses->courses) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Please use the same email address that you use to purchase your courses.'
+				'message' => 'Please use the same email address that you used to purchase your courses.'
 			));
 		}
 
@@ -209,7 +223,7 @@
 
 		// Enforce password security
 		$pw_length = getenv('MIN_PASSWORD_LENGTH');
-		$pw_length = $pw_length ? $pw_length : 8;
+		$pw_length = $pw_length ? intval($pw_length) : 8;
 		if (strlen($_POST['password']) < $pw_length) {
 			wp_send_json(array(
 				'code' => 401,
@@ -232,7 +246,10 @@
 
 		// Add validation key
 		$validation_key =  wp_generate_password(48);
-		set_transient('validate_user_' . $_POST['username'], $validation_key, 60 * 60 * 48);
+		update_user_meta($user, 'user_validation_key', array(
+			'key' => $validation_key,
+			'expires' => time() + (60 * 60 * 48)
+		));
 
 		// Send validation email
 		gmt_courses_send_validation_email($_POST['username'], $validation_key);
@@ -271,10 +288,11 @@
 
 		// Variables
 		$user = get_user_by('email', $_POST['username']);
-		$validation = get_transient('validate_user_' . $_POST['username']);
+		$validation = get_user_meta($user->ID, 'user_validation_key', true);
+		$signup_url = getenv('SIGNUP_URL');
 
 		// If validation fails
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $validation) !== 0) {
+		if (empty($user) || empty($validation) || strcmp($_POST['key'], $validation['key']) !== 0) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -282,7 +300,20 @@
 			));
 		}
 
-		// Send data back
+		// If validation key has expired, delete user and ask them to try again
+		if (time() > $validation['expires']) {
+			wp_delete_user($user->ID);
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This validation link has expired. Please <a href="' . $signup_url . '">try creating an account again</a>. If you feel this was in error, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+			));
+		}
+
+		// Remove the validation key
+		delete_user_meta($user->ID, 'user_validation_key');
+
+		// Send success data
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
@@ -346,7 +377,7 @@
 
 		// Enforce password requirements
 		$pw_length = getenv('MIN_PASSWORD_LENGTH');
-		$pw_length = $pw_length ? $pw_length : 8;
+		$pw_length = $pw_length ? intval($pw_length) : 8;
 		if (strlen($_POST['new_password']) < $pw_length) {
 			wp_send_json(array(
 				'code' => 401,
@@ -428,6 +459,18 @@
 
 	}
 
+	/**
+	 * Get the site domain and remove the www.
+	 * @return String The site domain
+	 */
+	function gmt_courses_get_site_domain() {
+		$sitename = strtolower( $_SERVER['SERVER_NAME'] );
+		if ( substr( $sitename, 0, 4 ) == 'www.' ) {
+			$sitename = substr( $sitename, 4 );
+		}
+		return $sitename;
+	}
+
 
 	/**
 	 * Send validation email to a new user
@@ -439,13 +482,13 @@
 		// Variables
 		$validate_url = getenv('VALIDATE_URL');
 		$site_name = get_bloginfo('name');
-		$domain = wpwebapp_get_site_domain();
+		$domain = gmt_courses_get_site_domain();
 		$headers = 'From: ' . $site_name . ' <donotreply@' . $domain . '>' . "\r\n";
 		$subject = 'Validate your new account at ' . $site_name;
-		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\n\n" . $validate_url . '?email=' . $email . '&key=' . $key;
+		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n" . $validate_url . '?email=' . $email . '&key=' . $key;
 
 		// Send email
-		$email = @wp_mail(sanitize_email($email), $subject, $message, $headers);
+		@wp_mail(sanitize_email($email), $subject, $message, $headers);
 
 	}
 
