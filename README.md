@@ -11,6 +11,7 @@ SetEnv COURSE_DATA <course-data-filename>
 SetEnv SIGNUP_URL <url-for-signup-page>
 SetEnv VALIDATE_URL <url-for-user-validation-page>
 SetEnv MIN_PASSWORD_LENGTH <min-password-length>
+SetEnv FRONTEND_URL <url-for-the-frontend> # if you want to redirect users away
 ```
 
 ## Ajax Call
