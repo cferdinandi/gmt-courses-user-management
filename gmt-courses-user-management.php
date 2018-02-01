@@ -507,5 +507,6 @@
 		$url = getenv('FRONTEND_URL');
 		if (is_admin() || empty($url)) return;
 		wp_redirect($url);
+		exit;
 	}
 	add_action('init', 'gmt_courses_redirect_from_front_end');
