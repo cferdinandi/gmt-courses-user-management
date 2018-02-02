@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.0.5
+ * Version: 0.0.6
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -212,13 +212,22 @@
 			));
 		}
 
-		// If username already exists
+		// If username already exists and is validated
 		if (username_exists($_POST['username'])) {
-			wp_send_json(array(
-				'code' => 401,
-				'status' => 'failed',
-				'message' => 'An account already exists for this email address. If you need to reset your password, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
-			));
+
+			// Get validation key
+			$user = get_user_by('email', $_POST['username']);
+			$validation = get_user_meta($user->ID, 'user_validation_key', true);
+
+			// If not awaiting validation, throw an error
+			if (empty($validation)) {
+				wp_send_json(array(
+					'code' => 401,
+					'status' => 'failed',
+					'message' => 'An account already exists for this email address. If you need to reset your password, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				));
+			}
+
 		}
 
 		// Enforce password security
@@ -291,6 +300,15 @@
 		$validation = get_user_meta($user->ID, 'user_validation_key', true);
 		$signup_url = getenv('SIGNUP_URL');
 
+		// If user exists but there's no validation key, let them know account already verified
+		if (!empty($user) && empty($validation)) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This account has already been validated. <a href="/">Please login</a> to access your courses. If you don\'t know your password or feel this is an error, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+			));
+		}
+
 		// If validation fails
 		if (empty($user) || empty($validation) || strcmp($_POST['key'], $validation['key']) !== 0) {
 			wp_send_json(array(
@@ -300,9 +318,8 @@
 			));
 		}
 
-		// If validation key has expired, delete user and ask them to try again
+		// If validation key has expired, ask them to try again
 		if (time() > $validation['expires']) {
-			wp_delete_user($user->ID);
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
