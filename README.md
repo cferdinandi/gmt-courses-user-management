@@ -1,9 +1,7 @@
 # GMT Courses User Management
 User processes for GMT Courses.
 
-## Environment Variables
-
-**Required:**
+## Required Environment Variables
 
 ```bash
 SetEnv CHECKOUT_URL <url-for-checkout-page>
@@ -12,16 +10,8 @@ SetEnv CHECKOUT_PW <basic-auth-password>
 SetEnv COURSE_DATA <course-data-filename>
 SetEnv SIGNUP_URL <url-for-signup-page>
 SetEnv VALIDATE_URL <url-for-user-validation-page>
-
-```
-
-**Optional:**
-
-```bash
-SetEnv MIN_PASSWORD_LENGTH <min-password-length> # defaults to 8
-SetEnv FRONTEND_URL <url-for-the-frontend> # if you want to redirect users away from WP
-SetEnv CODEWORD_NAME <random-string> # the name of a field with a validation key to check against
-SetEnv CODEWORD_KEY <random-string> # the validation key to check against
+SetEnv MIN_PASSWORD_LENGTH <min-password-length>
+SetEnv FRONTEND_URL <url-for-the-frontend> # if you want to redirect users away
 ```
 
 ## Ajax Call

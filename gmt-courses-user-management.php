@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.0.8
+ * Version: 0.0.9
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -91,6 +91,7 @@
 
 	}
 	add_action('wp_ajax_gmt_courses_get_courses', 'gmt_courses_get_courses');
+	add_action('wp_ajax_nopriv_gmt_courses_get_courses', 'gmt_courses_get_courses');
 
 
 	/**
@@ -105,27 +106,6 @@
 			return;
 		}
 
-		// Common failure JSON
-		$general_fail = array(
-			'code' => 401,
-			'status' => 'failed',
-			'message' => 'The username or password you provided is not valid.'
-		);
-
-		// Validation string
-		$codeword_name = getenv('CODEWORD_NAME');
-		$codeword_key = getenv('CODEWORD_KEY');
-		if (!empty($codeword_name) && !empty($codeword_key)) {
-			if (empty($_POST[$codeword_name]) || $_POST[$codeword_name] !== $codeword_key) {
-				wp_send_json($general_fail);
-			}
-		}
-
-		// Honeypot
-		if (!empty($_POST['username'])) {
-			wp_send_json($general_fail);
-		}
-
 		// Make sure user isn't already logged in
 		if (is_user_logged_in()) {
 			wp_send_json(array(
@@ -136,7 +116,7 @@
 		}
 
 		// Make sure account has been validated
-		$user = get_user_by('email', $_POST['email']);
+		$user = get_user_by('email', $_POST['username']);
 		if (!empty(get_user_meta($user->ID, 'user_validation_key', true))) {
 			wp_send_json(array(
 				'code' => 401,
@@ -147,7 +127,7 @@
 
 		// Authenticate User
 		$credentials = array(
-			'user_login' => $_POST['email'],
+			'user_login' => $_POST['username'],
 			'user_password' => $_POST['password'],
 			'remember' => true,
 		);
@@ -155,7 +135,11 @@
 
 		// If authentication fails
 		if (is_wp_error($login)) {
-			wp_send_json($general_fail);
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'The username or password you provided is not valid.'
+			));
 		}
 
 		// Send success message
@@ -207,27 +191,6 @@
 			return;
 		}
 
-		// Common failure JSON
-		$general_fail = array(
-			'code' => 401,
-			'status' => 'failed',
-			'message' => 'Please use the same email address that you used to purchase your courses.'
-		);
-
-		// Validation string
-		$codeword_name = getenv('CODEWORD_NAME');
-		$codeword_key = getenv('CODEWORD_KEY');
-		if (!empty($codeword_name) && !empty($codeword_key)) {
-			if (empty($_POST[$codeword_name]) || $_POST[$codeword_name] !== $codeword_key) {
-				wp_send_json($general_fail);
-			}
-		}
-
-		// Honeypot
-		if (!empty($_POST['username'])) {
-			wp_send_json($general_fail);
-		}
-
 		// Bail if user is already logged in
 		if (is_user_logged_in()) {
 			wp_send_json(array(
@@ -238,18 +201,22 @@
 		}
 
 		// Get user purchases
-		$courses = gmt_courses_get_user_courses($_POST['email']);
+		$courses = gmt_courses_get_user_courses($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($courses) || empty($courses->courses) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['email'])) {
-			wp_send_json($general_fail);
+		if (empty($courses) || empty($courses->courses) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please use the same email address that you used to purchase your courses.'
+			));
 		}
 
 		// If username already exists and is validated
-		if (username_exists($_POST['email'])) {
+		if (username_exists($_POST['username'])) {
 
 			// Get validation key
-			$user = get_user_by('email', $_POST['email']);
+			$user = get_user_by('email', $_POST['username']);
 			$validation = get_user_meta($user->ID, 'user_validation_key', true);
 
 			// If not awaiting validation, throw an error
@@ -275,7 +242,7 @@
 		}
 
 		// Create new user
-		$user = wp_create_user(sanitize_email($_POST['email']), $_POST['password'], sanitize_email($_POST['email']));
+		$user = wp_create_user(sanitize_email($_POST['username']), $_POST['password'], sanitize_email($_POST['username']));
 
 		// If account creation fails
 		if (is_wp_error($user)) {
@@ -294,7 +261,7 @@
 		));
 
 		// Send validation email
-		gmt_courses_send_validation_email($_POST['email'], $validation_key);
+		gmt_courses_send_validation_email($_POST['username'], $validation_key);
 
 		wp_send_json(array(
 			'code' => 200,
@@ -303,6 +270,7 @@
 		));
 
 	}
+	add_action('wp_ajax_gmt_courses_create_user', 'gmt_courses_create_user');
 	add_action('wp_ajax_nopriv_gmt_courses_create_user', 'gmt_courses_create_user');
 
 
@@ -328,7 +296,7 @@
 		}
 
 		// Variables
-		$user = get_user_by('email', $_POST['email']);
+		$user = get_user_by('email', $_POST['username']);
 		$validation = get_user_meta($user->ID, 'user_validation_key', true);
 		$signup_url = getenv('SIGNUP_URL');
 
@@ -370,6 +338,7 @@
 		));
 
 	};
+	add_action('wp_ajax_gmt_courses_validate_new_account', 'gmt_courses_validate_new_account');
 	add_action('wp_ajax_nopriv_gmt_courses_validate_new_account', 'gmt_courses_validate_new_account');
 
 
@@ -382,27 +351,6 @@
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
 			header('Location: ' . $_SERVER['HTTP_REFERER']);
 			return;
-		}
-
-		// Common failure JSON
-		$general_fail = array(
-			'code' => 401,
-			'status' => 'failed',
-			'message' => 'Something went wrong. Please try again. If you continue to see this message, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
-		);
-
-		// Validation string
-		$codeword_name = getenv('CODEWORD_NAME');
-		$codeword_key = getenv('CODEWORD_KEY');
-		if (!empty($codeword_name) && !empty($codeword_key)) {
-			if (empty($_POST[$codeword_name]) || $_POST[$codeword_name] !== $codeword_key) {
-				wp_send_json($general_fail);
-			}
-		}
-
-		// Honeypot
-		if (!empty($_POST['confirm_password'])) {
-			wp_send_json($general_fail);
 		}
 
 		// Bail if user is already logged in
@@ -460,7 +408,11 @@
 
 		// If update fails
 		if (is_wp_error($update)) {
-			wp_send_json($general_fail);
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>'
+			));
 		}
 
 		// Success!
@@ -472,6 +424,7 @@
 
 	}
 	add_action('wp_ajax_gmt_courses_change_password', 'gmt_courses_change_password');
+	add_action('wp_ajax_nopriv_gmt_courses_change_password', 'gmt_courses_change_password');
 
 
 	//
