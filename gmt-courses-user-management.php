@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.1.2
+ * Version: 0.1.3
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -501,7 +501,7 @@
 		$reset_key = get_user_meta($user->ID, 'password_reset_key', true);
 
 		// If user exists but there's no reset key, or the reset key has expired, have the user try again
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
+		if (empty($user) || empty($reset_key) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -510,7 +510,7 @@
 		}
 
 		// If reset key has expired, ask them to try again
-		if (time() > $validation['expires']) {
+		if (time() > $reset_key['expires']) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
