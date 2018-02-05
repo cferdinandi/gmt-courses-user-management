@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.1.1
+ * Version: 0.1.2
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -556,7 +556,7 @@
 		$frontend_url = getenv('FRONTEND_URL');
 
 		// If user exists but there's no reset key, or the reset key has expired, have the user try again
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0)) {
+		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
