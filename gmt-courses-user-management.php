@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.0.9
+ * Version: 0.1.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -96,7 +96,6 @@
 
 	/**
 	 * Log the user in via an Ajax call
-	 * @return JSON The user's course data
 	 */
 	function gmt_courses_login () {
 
@@ -121,7 +120,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Please validate your account using the link in the email that was sent to you. If you never received a validation link, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				'message' => 'Please validate your account using the link in the email that was sent to you. If you never received a validation link, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -224,7 +223,7 @@
 				wp_send_json(array(
 					'code' => 401,
 					'status' => 'failed',
-					'message' => 'An account already exists for this email address. If you need to reset your password, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+					'message' => 'An account already exists for this email address. If you need to reset your password, please email ' . gmt_courses_get_email() . '.'
 				));
 			}
 
@@ -249,7 +248,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -266,7 +265,7 @@
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.'
 		));
 
 	}
@@ -276,7 +275,6 @@
 
 	/**
 	 * Validate a new user account
-	 * @return [type] [description]
 	 */
 	function gmt_courses_validate_new_account () {
 
@@ -305,7 +303,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'This account has already been validated. <a href="/">Please login</a> to access your courses. If you don\'t know your password or feel this is an error, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				'message' => 'This account has already been validated. <a href="/">Please login</a> to access your courses. If you don\'t know your password or feel this is an error, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -314,7 +312,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'This validation link is not valid. If you feel this was in error, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				'message' => 'This validation link is not valid. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -323,7 +321,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'This validation link has expired. Please <a href="' . $signup_url . '">try creating an account again</a>. If you feel this was in error, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>.'
+				'message' => 'This validation link has expired. Please <a href="' . $signup_url . '">try creating an account again</a>. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -353,7 +351,7 @@
 			return;
 		}
 
-		// Bail if user is already logged in
+		// Bail if user is not logged in
 		if (!is_user_logged_in()) {
 			wp_send_json(array(
 				'code' => 401,
@@ -379,7 +377,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Please enter enter a new password.'
+				'message' => 'Please enter a new password.'
 			));
 		}
 
@@ -411,7 +409,7 @@
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email <a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>'
+				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
@@ -427,10 +425,220 @@
 	add_action('wp_ajax_nopriv_gmt_courses_change_password', 'gmt_courses_change_password');
 
 
+	/**
+	 * Send a "lost password" reset email
+	 */
+	function gmt_courses_lost_password () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		// Bail if user is already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
+		}
+
+		// Make sure the user exists
+		$user = get_user_by('email', $_POST['username']);
+		if (empty($user)) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please enter the email address associated with your account. If you don\'t remember what it is, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// Add reset validation key
+		$reset_key =  wp_generate_password(48, false);
+		update_user_meta($user, 'password_reset_key', array(
+			'key' => $reset_key,
+			'expires' => time() + (60 * 60 * 48)
+		));
+
+		// Send reset email
+		gmt_courses_send_pw_reset_email($_POST['username'], $reset_key);
+
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'message' => 'A link to reset your password has been sent to ' . $_POST['username'] . '. Please reset your password within the next 48 hours. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.'
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_lost_password', 'gmt_courses_lost_password');
+	add_action('wp_ajax_nopriv_gmt_courses_lost_password', 'gmt_courses_lost_password');
+
+
+	/**
+	 * Check if the provided reset key is valid
+	 */
+	function gmt_courses_is_reset_key_valid () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		// Bail if user is already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
+		}
+
+		// Variables
+		$user = get_user_by('email', $_POST['username']);
+		$reset_key = get_user_meta($user->ID, 'password_reset_key', true);
+
+		// If user exists but there's no reset key, or the reset key has expired, have the user try again
+		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0)) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This password reset link is no longer valid. Please try again. If you keep getting this message, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// If reset key has expired, ask them to try again
+		if (time() > $validation['expires']) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This password reset link has expired. Please request a new one. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// Otherwise, reset key is valid
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success'
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_is_reset_key_valid', 'gmt_courses_is_reset_key_valid');
+	add_action('wp_ajax_nopriv_gmt_courses_is_reset_key_valid', 'gmt_courses_is_reset_key_valid');
+
+
+	/**
+	 * Reset a user's password
+	 */
+	function gmt_courses_reset_password () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		// Bail if user is already logged in
+		if (is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re already logged in.'
+			));
+		}
+
+		// Variables
+		$user = get_user_by('email', $_POST['username']);
+		$reset_key = get_user_meta($user->ID, 'password_reset_key', true);
+		$reset_pw_url = getenv('RESET_PW_URL');
+		$frontend_url = getenv('FRONTEND_URL');
+
+		// If user exists but there's no reset key, or the reset key has expired, have the user try again
+		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0)) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This password reset link is no longer valid. <a href="' . $reset_pw_url . '">Please try again.</a> If you keep getting this message, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// If reset key has expired, ask them to try again
+		if (time() > $validation['expires']) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'This password reset link has expired. <a href="' . $reset_pw_url . '">Please request a new one.</a> If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// Check that password is supplied
+		if (empty($_POST['password'])) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please enter a new password.'
+			));
+		}
+
+		// Enforce password requirements
+		$pw_length = getenv('MIN_PASSWORD_LENGTH');
+		$pw_length = $pw_length ? intval($pw_length) : 8;
+		if (strlen($_POST['new_password']) < $pw_length) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please enter a new password that\'s at least ' . $pw_length . ' characters long.'
+			));
+		}
+
+		// Update the password
+		$update = wp_update_user(array('ID' => $user->ID, 'user_pass' => $_POST['password']));
+
+		// If update fails
+		if (is_wp_error($update)) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
+			));
+		}
+
+		// Remove the validation key
+		delete_user_meta($user->ID, 'password_reset_key');
+
+		// Send success data
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'message' => 'Your password was successfully reset.' . (empty($frontend_url) ? '' : ' <a href="' . $frontend_url . '">Click here to view your courses.</a>')
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_reset_password', 'gmt_courses_reset_password');
+	add_action('wp_ajax_nopriv_gmt_courses_reset_password', 'gmt_courses_reset_password');
+
+
+
 	//
 	// Helper Methods
 	//
 
+	/**
+	 * Get an encoded email link
+	 * @return string The email link
+	 */
+	function gmt_courses_get_email () {
+		return '<a href="mailto:&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;">&#099;&#104;&#114;&#105;&#115;&#064;&#103;&#111;&#109;&#097;&#107;&#101;&#116;&#104;&#105;&#110;&#103;&#115;&#046;&#099;&#111;&#109;</a>';
+	};
+
+
+	/**
+	 * Get a list of purchases made with the user's email address
+	 * @param  string $email The user's email address
+	 * @return array         The user's purchases
+	 */
 	function gmt_courses_get_user_purchases ($email = '') {
 
 		// Variables
@@ -456,6 +664,11 @@
 	}
 
 
+	/**
+	 * Get courses purchased by the user
+	 * @param  string $email The user's email address
+	 * @return array         The courses purchased by the user
+	 */
 	function gmt_courses_get_user_courses ($email = '') {
 
 		// Variables
@@ -476,9 +689,10 @@
 
 	}
 
+
 	/**
 	 * Get the site domain and remove the www.
-	 * @return String The site domain
+	 * @return string The site domain
 	 */
 	function gmt_courses_get_site_domain() {
 		$sitename = strtolower( $_SERVER['SERVER_NAME'] );
@@ -491,8 +705,8 @@
 
 	/**
 	 * Send validation email to a new user
-	 * @param  String $email The new user's email
-	 * @param  String $key   The new user's validation key
+	 * @param  string $email The new user's email
+	 * @param  string $key   The new user's validation key
 	 */
 	function gmt_courses_send_validation_email ($email, $key) {
 
@@ -502,7 +716,7 @@
 		$domain = gmt_courses_get_site_domain();
 		$headers = 'From: ' . $site_name . ' <donotreply@' . $domain . '>' . "\r\n";
 		$subject = 'Validate your new account at ' . $site_name;
-		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n" . $validate_url . '?email=' . $email . '&key=' . $key;
+		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n\r\n" . $validate_url . '?email=' . $email . '&key=' . $key;
 
 		// Send email
 		@wp_mail(sanitize_email($email), $subject, $message, $headers);
@@ -510,11 +724,46 @@
 	}
 
 
+	/**
+	 * Send password reset email to user
+	 * @param  string $email The user's email
+	 * @param  string $key   The reset validation key
+	 */
+	function gmt_courses_send_pw_reset_email ($email, $key) {
+
+		// Variables
+		$reset_pw_url = getenv('RESET_PW_URL');
+		$site_name = get_bloginfo('name');
+		$domain = gmt_courses_get_site_domain();
+		$headers = 'From: ' . $site_name . ' <donotreply@' . $domain . '>' . "\r\n";
+		$subject = 'Reset your password for ' . $site_name;
+		$message = 'Please click the link below to reset your password for ' . $site_name . '. If you did not try to reset your password for ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n\r\n" . $reset_pw_url . '?email=' . $email . '&key=' . $key;
+
+		// Send email
+		@wp_mail(sanitize_email($email), $subject, $message, $headers);
+
+	}
+
+
+	/**
+	 * Disable Notifications
+	 * @todo  make these configurable with environment variables
+	 */
+
 	// Disable default new user admin notifications
 	if ( !function_exists( 'wp_new_user_notification' ) ) {
 		function wp_new_user_notification() {}
 	}
 
+	// Disable user password reset notification to admin
+	if ( ! function_exists( 'wp_password_change_notification' ) ) {
+		function wp_password_change_notification( $user ) {
+			return;
+		}
+	}
+
+	// Disable password change notification to the user
+	add_filter( 'send_email_change_email', '__return_false' );
 
 
 	/**
