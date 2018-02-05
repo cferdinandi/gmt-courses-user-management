@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.1.3
+ * Version: 0.2.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -457,7 +457,7 @@
 
 		// Add reset validation key
 		$reset_key =  wp_generate_password(48, false);
-		update_user_meta($user, 'password_reset_key', array(
+		update_user_meta($user->ID, 'password_reset_key', array(
 			'key' => $reset_key,
 			'expires' => time() + (60 * 60 * 48)
 		));
@@ -556,16 +556,16 @@
 		$frontend_url = getenv('FRONTEND_URL');
 
 		// If user exists but there's no reset key, or the reset key has expired, have the user try again
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
+		if (empty($user) || empty($reset_key) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'This password reset link is no longer valid. <a href="' . $reset_pw_url . '">Please try again.</a> If you keep getting this message, please email ' . gmt_courses_get_email() . '.'
+				'message' => 'This password reset link is no longer valid. Please try again. If you keep getting this message, please email ' . gmt_courses_get_email() . '.'
 			));
 		}
 
 		// If reset key has expired, ask them to try again
-		if (time() > $validation['expires']) {
+		if (time() > $reset_key['expires']) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -585,7 +585,7 @@
 		// Enforce password requirements
 		$pw_length = getenv('MIN_PASSWORD_LENGTH');
 		$pw_length = $pw_length ? intval($pw_length) : 8;
-		if (strlen($_POST['new_password']) < $pw_length) {
+		if (strlen($_POST['password']) < $pw_length) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -607,6 +607,23 @@
 
 		// Remove the validation key
 		delete_user_meta($user->ID, 'password_reset_key');
+
+		// Authenticate User
+		$credentials = array(
+			'user_login' => $_POST['username'],
+			'user_password' => $_POST['password'],
+			'remember' => true,
+		);
+		$login = wp_signon($credentials);
+
+		// If authentication fails
+		if (is_wp_error($login)) {
+			wp_send_json(array(
+				'code' => 205,
+				'status' => 'success',
+				'message' => 'Your password was successfully reset.' . (empty($frontend_url) ? '' : ' <a href="' . $frontend_url . '">Sign in with your new password</a> to view your courses.')
+			));
+		}
 
 		// Send success data
 		wp_send_json(array(
