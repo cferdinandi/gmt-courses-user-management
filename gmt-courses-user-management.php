@@ -501,7 +501,7 @@
 		$reset_key = get_user_meta($user->ID, 'password_reset_key', true);
 
 		// If user exists but there's no reset key, or the reset key has expired, have the user try again
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0)) {
+		if (empty($user) || empty($validation) || strcmp($_POST['key'], $reset_key['key']) !== 0) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
