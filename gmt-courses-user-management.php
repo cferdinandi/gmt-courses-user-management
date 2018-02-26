@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -667,7 +667,7 @@
 		return json_decode(
 			wp_remote_retrieve_body(
 				wp_remote_request(
-					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users/' . $email,
+					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users2/' . $email, // @todo change back to users/
 					array(
 						'method'    => 'GET',
 						'headers'   => array(
@@ -695,11 +695,31 @@
 		// Bail if the user has no purchases
 		if (empty($purchases)) return;
 
-		// Get course data and remove courses the user doesn't have access to
+		// Get course data
 		$courses = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($course_data, '/'), true));
+
+		// Remove courses the user doesn't have access to
 		foreach ($courses->courses as $key => $course) {
-			if (in_array($course->id, $purchases)) continue;
-			unset($courses->courses[$key]);
+
+			// Determine what level of access the user has to this course
+			$has_course = array_intersect($course->courseid, $purchases);
+			$has_book = array_intersect($course->bookid, $purchases);
+
+			// If they have no access, remove it
+			if (empty($has_course) && empty($has_book)) {
+				unset($courses->courses[$key]);
+			}
+
+			// If they only have access to courses
+			if (empty($has_book)) {
+				unset($courses->courses[$key]->assets);
+			}
+
+			// If they only have access to the books
+			if (empty($has_course)) {
+				unset($courses->courses[$key]->lessons);
+			}
+
 		}
 
 		return $courses;
