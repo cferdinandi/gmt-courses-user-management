@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.4.0
+ * Version: 0.4.1
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -726,7 +726,7 @@
 		foreach ($courses->academy as $key => $session) {
 
 			// Determine what level of access the user has to this course
-			$has_access = array_intersect($session->id, $purchases);
+			$has_access = in_array($session->id, $purchases);
 
 			// If they have no access, remove it
 			if (empty($has_access)) {
