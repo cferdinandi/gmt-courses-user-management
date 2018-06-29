@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.4.3
+ * Version: 0.4.4
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -690,7 +690,10 @@
 
 		// Variables
 		$course_data = getenv('COURSE_DATA');
-		$purchases = get_object_vars(gmt_courses_get_user_purchases($email));
+		$purchases = gmt_courses_get_user_purchases($email);
+		if (gettype($purchases) === 'object') {
+			$purchases = get_object_vars(gmt_courses_get_user_purchases($email));
+		}
 
 		// Bail if the user has no purchases
 		if (empty($purchases)) return;
