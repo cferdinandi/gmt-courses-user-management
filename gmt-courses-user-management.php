@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.4.6
+ * Version: 0.5.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -667,7 +667,7 @@
 		return json_decode(
 			wp_remote_retrieve_body(
 				wp_remote_request(
-					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users/' . $email, // @todo change back to users/
+					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/users/' . $email,
 					array(
 						'method'    => 'GET',
 						'headers'   => array(
@@ -690,7 +690,8 @@
 
 		// Variables
 		$course_data = getenv('COURSE_DATA');
-		$purchases = gmt_courses_get_user_purchases($email);
+		$user_data = gmt_courses_get_user_purchases($email);
+		$purchases = $user_data->purchases;
 		if (gettype($purchases) === 'object') {
 			$purchases = get_object_vars(gmt_courses_get_user_purchases($email));
 		}
@@ -742,6 +743,7 @@
 		// Reindex the arrays
 		$courses->courses = array_values($courses->courses);
 		$courses->academy = array_values($courses->academy);
+		$courses->invoices = $user_data->invoices;
 
 		return $courses;
 
