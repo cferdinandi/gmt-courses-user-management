@@ -203,7 +203,7 @@
 		$courses = gmt_courses_get_user_courses($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($courses) || (empty($courses->courses) && empty($courses->academy) &&empty($courses->officeHours)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($courses) || (empty($courses->courses) && empty($courses->academy) && empty($courses->officeHours)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
