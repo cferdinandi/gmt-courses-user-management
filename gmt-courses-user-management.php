@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.7.0
+ * Version: 0.8.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -238,7 +238,7 @@
 		$courses = gmt_courses_get_user_courses($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($courses) || (empty($courses->courses) && empty($courses->academy) && empty($courses->officeHours) && empty($courses->projects)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($courses) || (empty($courses->courses) && empty($courses->academy) && empty($courses->projects)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -806,22 +806,10 @@
 
 		}
 
-		// Remove office hours if the user doesn't have access
-		if (!empty($courses->officeHours)) {
-
-			// Check of the user has access to Office Hours
-			$is_member = in_array($courses->officeHours->id, $purchases);
-
-			// If they don't have access, remove it
-			if (empty($is_member)) {
-				unset($courses->officeHours);
-			}
-		}
-
 		// Remove projects if the user doesn't have access
 		if (!empty($courses->projects)) {
 
-			// Check of the user has access to Office Hours
+			// Check of the user has access to projects
 			$is_member = in_array($courses->projects->id, $purchases);
 
 			// If they don't have access, remove it
