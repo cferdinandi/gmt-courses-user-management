@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.6.2
+ * Version: 0.7.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -92,6 +92,41 @@
 	}
 	add_action('wp_ajax_gmt_courses_get_courses', 'gmt_courses_get_courses');
 	add_action('wp_ajax_nopriv_gmt_courses_get_courses', 'gmt_courses_get_courses');
+
+
+	/**
+	 * Get user subscriptions
+	 */
+	function gmt_courses_get_subscriptions () {
+
+		// Bail if not an Ajax request
+		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		if (!is_user_logged_in()) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'You\'re not logged in yet.'
+			));
+		}
+
+		// Get user subscriptions
+		$user = wp_get_current_user(gmt_courses_get_user_subscriptions('chris@gomakethings.com', 36000));
+		$subscriptions = gmt_courses_get_user_subscriptions($user->user_email, $_POST['id']);
+
+		// Send data back
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'data' => $subscriptions
+		));
+
+	}
+	add_action('wp_ajax_gmt_courses_get_subscriptions', 'gmt_courses_get_subscriptions');
+	add_action('wp_ajax_nopriv_gmt_courses_get_subscriptions', 'gmt_courses_get_subscriptions');
 
 
 	/**
@@ -682,6 +717,37 @@
 
 
 	/**
+	 * Get subscription data by a user's email address and product ID
+	 * @param  string  $email The user's email address
+	 * @param  integer $id    The product ID
+	 * @return array         The user's purchases
+	 */
+	function gmt_courses_get_user_subscriptions ($email = '', $id = 0) {
+
+		// Variables
+		$checkout_url = getenv('CHECKOUT_URL');
+		$checkout_username = getenv('CHECKOUT_USERNAME');
+		$checkout_pw = getenv('CHECKOUT_PW');
+
+		// Get user purchases
+		return json_decode(
+			wp_remote_retrieve_body(
+				wp_remote_request(
+					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/subscriptions?email=' . $email . '&id=' . $id,
+					array(
+						'method'    => 'GET',
+						'headers'   => array(
+							'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
+						),
+					)
+				)
+			)
+		);
+
+	}
+
+
+	/**
 	 * Get courses purchased by the user
 	 * @param  string $email The user's email address
 	 * @return array         The courses purchased by the user
@@ -768,6 +834,8 @@
 		$courses->courses = array_values($courses->courses);
 		$courses->academy = array_values($courses->academy);
 		$courses->invoices = $user_data->invoices;
+		// For future use: list of subscriptions user has had
+		// $courses->subscriptions = $user_data->subscriptions;
 
 		return $courses;
 
