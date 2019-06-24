@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.8.0
+ * Version: 0.9.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -768,27 +768,27 @@
 		// Get course data
 		$courses = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($course_data, '/'), true));
 
-		// Remove courses the user doesn't have access to
-		foreach ($courses->courses as $key => $course) {
+		// Remove pocket guides the user doesn't have access to
+		foreach ($courses->guides as $key => $guide) {
 
 			// Determine what level of access the user has to this course
-			$has_course = array_intersect($course->courseid, $purchases);
-			$has_book = array_intersect($course->bookid, $purchases);
+			$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3', ), $purchases);
+			$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3', ), $purchases);
 
 
 			// If they have no access, remove it
-			if (empty($has_course) && empty($has_book)) {
-				unset($courses->courses[$key]);
+			if (empty($has_video) && empty($has_book)) {
+				unset($courses->guides[$key]);
 			}
 
-			// If they only have access to courses
+			// If they only have access to videos
 			if (empty($has_book)) {
-				unset($courses->courses[$key]->assets);
+				unset($courses->guides[$key]->assets);
 			}
 
 			// If they only have access to the books
-			if (empty($has_course)) {
-				unset($courses->courses[$key]->lessons);
+			if (empty($has_video)) {
+				unset($courses->guides[$key]->lessons);
 			}
 
 		}
@@ -806,24 +806,10 @@
 
 		}
 
-		// Remove projects if the user doesn't have access
-		if (!empty($courses->projects)) {
-
-			// Check of the user has access to projects
-			$is_member = in_array($courses->projects->id, $purchases);
-
-			// If they don't have access, remove it
-			if (empty($is_member)) {
-				unset($courses->projects);
-			}
-		}
-
 		// Reindex the arrays
 		$courses->courses = array_values($courses->courses);
 		$courses->academy = array_values($courses->academy);
 		$courses->invoices = $user_data->invoices;
-		// For future use: list of subscriptions user has had
-		// $courses->subscriptions = $user_data->subscriptions;
 
 		return $courses;
 
