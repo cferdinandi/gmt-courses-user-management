@@ -35,7 +35,8 @@ atomic.ajax({
 ## Actions
 
 - `gmt_courses_is_logged_in` - Check if the current user is logged in.
-- `gmt_courses_get_courses` - Get course data for a logged in user.
+- `gmt_courses_get_products` - Get purchased products for a logged in user.
+- `gmt_courses_get_product` - Get details for a specific product a user has purchased.
 - `gmt_courses_get_subscriptions` - Get subscription data for a logged in user.
 - `gmt_courses_login` - Log a user in.
 - `gmt_courses_logout` - Log the current user out.

@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 0.9.0
+ * Version: 1.0.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -59,7 +59,7 @@
 	/**
 	 * Get the courses an already logged in user has access to
 	 */
-	function gmt_courses_get_courses () {
+	function gmt_courses_get_products () {
 
 		// Bail if not an Ajax request
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
@@ -77,7 +77,7 @@
 
 		// Get user purchases
 		$user = wp_get_current_user();
-		$courses = gmt_courses_get_user_courses($user->user_email);
+		$products = gmt_courses_get_user_products($user->user_email);
 
 		// Send data back
 		wp_send_json(array(
@@ -85,19 +85,20 @@
 			'status' => 'success',
 			'data' => array(
 				'email' => $user->user_email,
-				'data' => $courses
+				'products' => $products
 			)
 		));
 
 	}
-	add_action('wp_ajax_gmt_courses_get_courses', 'gmt_courses_get_courses');
-	add_action('wp_ajax_nopriv_gmt_courses_get_courses', 'gmt_courses_get_courses');
+	add_action('wp_ajax_gmt_courses_get_products', 'gmt_courses_get_products');
+	add_action('wp_ajax_nopriv_gmt_courses_get_products', 'gmt_courses_get_products');
+
 
 
 	/**
-	 * Get user subscriptions
+	 * Get the courses an already logged in user has access to
 	 */
-	function gmt_courses_get_subscriptions () {
+	function gmt_courses_get_product () {
 
 		// Bail if not an Ajax request
 		if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
@@ -113,20 +114,19 @@
 			));
 		}
 
-		// Get user subscriptions
-		$user = wp_get_current_user(gmt_courses_get_user_subscriptions('chris@gomakethings.com', 36000));
-		$subscriptions = gmt_courses_get_user_subscriptions($user->user_email, $_POST['id']);
+		// Get user data
+		$user = wp_get_current_user();
 
 		// Send data back
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'data' => $subscriptions
+			'data' => gmt_courses_get_user_product($user->user_email, $_POST['id'], $_POST['type'])
 		));
 
 	}
-	add_action('wp_ajax_gmt_courses_get_subscriptions', 'gmt_courses_get_subscriptions');
-	add_action('wp_ajax_nopriv_gmt_courses_get_subscriptions', 'gmt_courses_get_subscriptions');
+	add_action('wp_ajax_gmt_courses_get_product', 'gmt_courses_get_product');
+	add_action('wp_ajax_nopriv_gmt_courses_get_product', 'gmt_courses_get_product');
 
 
 	/**
@@ -144,7 +144,7 @@
 		if (is_user_logged_in()) {
 			wp_send_json(array(
 				'code' => 401,
-				'status' => 'failed',
+				'status' => 'loggedin',
 				'message' => 'You\'re already logged in.'
 			));
 		}
@@ -235,10 +235,10 @@
 		}
 
 		// Get user purchases
-		$courses = gmt_courses_get_user_courses($_POST['username']);
+		$products = gmt_courses_get_user_products($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($courses) || (empty($courses->courses) && empty($courses->academy) && empty($courses->projects)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($products) || (empty($products->courses) && empty($products->academy) && empty($products->projects)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -717,45 +717,14 @@
 
 
 	/**
-	 * Get subscription data by a user's email address and product ID
-	 * @param  string  $email The user's email address
-	 * @param  integer $id    The product ID
-	 * @return array         The user's purchases
-	 */
-	function gmt_courses_get_user_subscriptions ($email = '', $id = 0) {
-
-		// Variables
-		$checkout_url = getenv('CHECKOUT_URL');
-		$checkout_username = getenv('CHECKOUT_USERNAME');
-		$checkout_pw = getenv('CHECKOUT_PW');
-
-		// Get user purchases
-		return json_decode(
-			wp_remote_retrieve_body(
-				wp_remote_request(
-					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/subscriptions?email=' . $email . '&id=' . $id,
-					array(
-						'method'    => 'GET',
-						'headers'   => array(
-							'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
-						),
-					)
-				)
-			)
-		);
-
-	}
-
-
-	/**
-	 * Get courses purchased by the user
+	 * Get products purchased by the user
 	 * @param  string $email The user's email address
-	 * @return array         The courses purchased by the user
+	 * @return array         The products purchased by the user
 	 */
-	function gmt_courses_get_user_courses ($email = '') {
+	function gmt_courses_get_user_products ($email = '') {
 
 		// Variables
-		$course_data = getenv('COURSE_DATA');
+		$product_data_file = getenv('COURSE_DATA');
 		$user_data = gmt_courses_get_user_purchases($email);
 		$purchases = $user_data->purchases;
 		if (gettype($purchases) === 'object') {
@@ -765,53 +734,103 @@
 		// Bail if the user has no purchases
 		if (empty($purchases)) return;
 
-		// Get course data
-		$courses = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($course_data, '/'), true));
+		// Get product data
+		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($product_data_file, '/'), true));
 
-		// Remove pocket guides the user doesn't have access to
-		foreach ($courses->guides as $key => $guide) {
+		// Setup products object
+		$products = array(
+			'invoices' => $user_data->invoices,
+			'resources' => $product_data->resources,
+			'academy' => array(),
+			'guides' => array(),
+			'projects' => array(),
+		);
 
-			// Determine what level of access the user has to this course
-			$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3', ), $purchases);
-			$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3', ), $purchases);
-
-
-			// If they have no access, remove it
-			if (empty($has_video) && empty($has_book)) {
-				unset($courses->guides[$key]);
+		// Get purchased Academy memberships
+		foreach($product_data->academy as $key => $session) {
+			if (in_array($session->id, $purchases)) {
+				$products['academy'][] = array(
+					'id' => $session->id,
+					'title' => $session->title,
+					'url' => $session->url,
+					'slack' => $session->slack,
+				);
 			}
-
-			// If they only have access to videos
-			if (empty($has_book)) {
-				unset($courses->guides[$key]->assets);
-			}
-
-			// If they only have access to the books
-			if (empty($has_video)) {
-				unset($courses->guides[$key]->lessons);
-			}
-
 		}
 
-		// Remove JS academy's the user doesn't have access to
-		foreach ($courses->academy as $key => $session) {
-
-			// Determine what level of access the user has to this course
-			$has_access = in_array($session->id, $purchases);
-
-			// If they have no access, remove it
-			if (empty($has_access)) {
-				unset($courses->academy[$key]);
+		// Get purchased product guides
+		foreach($product_data->guides as $key => $guide) {
+			if (in_array($guide->id, $purchases)) {
+				$products['guides'][] = array(
+					'id' => $guide->id,
+					'title' => $guide->title,
+					'url' => $guide->url,
+				);
 			}
-
 		}
 
-		// Reindex the arrays
-		$courses->courses = array_values($courses->courses);
-		$courses->academy = array_values($courses->academy);
-		$courses->invoices = $user_data->invoices;
+		return $products;
 
-		return $courses;
+	}
+
+
+	function gmt_courses_get_product_by_id ($products, $id) {
+		foreach ($products as $key => $product) {
+			if (strval($product->id) === strval($id)) return $product;
+		}
+		return false;
+	}
+
+
+	/**
+	 * Get product if purchased by the user
+	 * @param  string $email The user's email address
+	 * @param  string $id    The product ID
+	 * @return array         The products purchased by the user
+	 */
+	function gmt_courses_get_user_product ($email = '', $id = '', $type = '') {
+
+		// Variables
+		$product_data_file = getenv('COURSE_DATA');
+		$user_data = gmt_courses_get_user_purchases($email);
+		$purchases = $user_data->purchases;
+		if (gettype($purchases) === 'object') {
+			$purchases = get_object_vars($purchases);
+		}
+		$has_book = false;
+		$has_video = false;
+
+		// Bail if the user has not purchased the product
+		if (empty($purchases)) return;
+		if ($type === 'academy') {
+			if (empty(in_array($id, $purchases))) return;
+		} else {
+			$has_book = array_intersect(array($id . '_1', $id . '_3'), $purchases);
+			$has_video = array_intersect(array($id . '_2', $id . '_3'), $purchases);
+			if (empty($has_book) && empty($has_video)) return;
+		}
+
+		// Get product data
+		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($product_data_file, '/'), true));
+
+		// Get product by ID
+		$product = gmt_courses_get_product_by_id($product_data->$type, $id);
+		if (empty($product)) return;
+
+		// If Academy, return product as-is
+		if ($type === 'academy') return $product;
+
+		// If the user doesn't have access to the ebook files, remove them
+		if (empty($has_book)) {
+			unset($product['assets']);
+		}
+
+		// If the user doesn't have access to the video lessons, remove them
+		if (empty($has_video)) {
+			unset($product['lessons']);
+		}
+
+		return $product;
 
 	}
 
