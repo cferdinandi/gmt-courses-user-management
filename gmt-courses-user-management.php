@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -822,12 +822,12 @@
 
 		// If the user doesn't have access to the ebook files, remove them
 		if (empty($has_book)) {
-			unset($product['assets']);
+			$product->assets = null;
 		}
 
 		// If the user doesn't have access to the video lessons, remove them
 		if (empty($has_video)) {
-			unset($product['lessons']);
+			$product->lessons = null;
 		}
 
 		return $product;
