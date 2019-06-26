@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -238,11 +238,11 @@
 		$products = gmt_courses_get_user_products($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($products) || (empty($products->courses) && empty($products->academy) && empty($products->projects)) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['projects'])) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
-				'message' => 'Please use the same email address that you used to purchase your courses.'
+				'message' => 'Please use the same email address that you used to purchase your courses.',
 			));
 		}
 
