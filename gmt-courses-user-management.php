@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -238,7 +238,7 @@
 		$products = gmt_courses_get_user_products($_POST['username']);
 
 		// If user hasn't made any purchases
-		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['projects'])) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['projects']) && empty($products['products'])) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -744,6 +744,7 @@
 			'academy' => array(),
 			'guides' => array(),
 			'projects' => array(),
+			'products' => array(),
 		);
 
 		// Get purchased Academy memberships
@@ -758,7 +759,7 @@
 			}
 		}
 
-		// Get purchased product guides
+		// Get purchased pocket guides
 		foreach($product_data->guides as $key => $guide) {
 			if (in_array($guide->id, $purchases)) {
 				$products['guides'][] = array(
@@ -769,7 +770,7 @@
 			}
 		}
 
-		// Get purchased product guides
+		// Get purchased projects
 		foreach($product_data->projects as $key => $project) {
 			if (in_array($project->id, $purchases)) {
 				$products['projects'][] = array(
@@ -780,14 +781,26 @@
 			}
 		}
 
+		// Get other purchased products
+		foreach($product_data->products as $key => $product) {
+			if (in_array($product->id, $purchases)) {
+				$products['products'][] = array(
+					'id' => $product->id,
+					'title' => $product->title,
+					'url' => $product->url,
+				);
+			}
+		}
+
 		return $products;
 
 	}
 
 
 	function gmt_courses_get_product_by_id ($products, $id) {
+		$id = strval($id);
 		foreach ($products as $key => $product) {
-			if (strval($product->id) === strval($id)) return $product;
+			if (strval($product->id) === $id) return $product;
 		}
 		return false;
 	}
@@ -812,9 +825,9 @@
 		$has_video = false;
 
 		// Bail if the user has not purchased the product
-		if (empty($purchases)) return;
-		if ($type === 'academy') {
-			if (empty(in_array($id, $purchases))) return;
+		if (empty($purchases)) return ;
+		if ($type === 'academy' || $type === 'products') {
+			if (empty(in_array(intval($id), $purchases))) return;
 		} else {
 			$has_book = array_intersect(array($id . '_1', $id . '_3'), $purchases);
 			$has_video = array_intersect(array($id . '_2', $id . '_3'), $purchases);
@@ -829,7 +842,7 @@
 		if (empty($product)) return;
 
 		// If Academy, return product as-is
-		if ($type === 'academy') return $product;
+		if ($type === 'academy' || $type === 'products') return $product;
 
 		// If the user doesn't have access to the ebook files, remove them
 		if (empty($has_book)) {
