@@ -753,7 +753,6 @@
 			'resources' => $product_data->resources,
 			'academy' => array(),
 			'guides' => array(),
-			'projects' => array(),
 			'products' => array(),
 		);
 
@@ -776,17 +775,6 @@
 					'id' => $guide->id,
 					'title' => $guide->title,
 					'url' => $guide->url,
-				);
-			}
-		}
-
-		// Get purchased projects
-		foreach($product_data->projects as $key => $project) {
-			if (in_array($project->id, $purchases)) {
-				$products['projects'][] = array(
-					'id' => $project->id,
-					'title' => $project->title,
-					'url' => $project->url,
 				);
 			}
 		}
