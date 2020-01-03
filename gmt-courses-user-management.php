@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -234,11 +234,21 @@
 			));
 		}
 
+		// Make sure email address is valid
+		$username = sanitize_email($_POST['username']);
+		if ($username !== $_POST['username']) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please use a valid email address.',
+			));
+		}
+
 		// Get user purchases
-		$products = gmt_courses_get_user_products($_POST['username']);
+		$products = gmt_courses_get_user_products($username);
 
 		// If user hasn't made any purchases
-		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['projects']) && empty($products['products'])) || !filter_var($_POST['username'], FILTER_VALIDATE_EMAIL) || !validate_username($_POST['username'])) {
+		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
 			wp_send_json(array(
 				'code' => 401,
 				'status' => 'failed',
@@ -247,10 +257,10 @@
 		}
 
 		// If username already exists and is validated
-		if (username_exists($_POST['username'])) {
+		if (username_exists($username)) {
 
 			// Get validation key
-			$user = get_user_by('email', $_POST['username']);
+			$user = get_user_by('email', $username);
 			$validation = get_user_meta($user->ID, 'user_validation_key', true);
 
 			// If not awaiting validation, throw an error
@@ -276,7 +286,7 @@
 		}
 
 		// Create new user
-		$user = wp_create_user(sanitize_email($_POST['username']), $_POST['password'], sanitize_email($_POST['username']));
+		$user = wp_create_user($username, $_POST['password'], $username);
 
 		// If account creation fails
 		if (is_wp_error($user)) {
@@ -295,7 +305,7 @@
 		));
 
 		// Send validation email
-		gmt_courses_send_validation_email($_POST['username'], $validation_key);
+		gmt_courses_send_validation_email($username, $validation_key);
 
 		wp_send_json(array(
 			'code' => 200,
