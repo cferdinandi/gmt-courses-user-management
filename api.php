@@ -158,7 +158,7 @@
 		}
 
 		// Make sure user isn't already logged in
-		if (gmt_courses_api_is_user_logged_in()) {
+		if (gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_already_logged_in_response();
 		}
 
@@ -257,7 +257,7 @@
 		}
 
 		// Make sure user isn't already logged in
-		if (gmt_courses_api_is_user_logged_in()) {
+		if (gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_already_logged_in_response();
 		}
 
@@ -306,7 +306,7 @@
 	}
 
 	/**
-	 * Changea  user's password
+	 * Change a user's password
 	 */
 	function gmt_courses_api_password_change ($request) {
 
@@ -319,7 +319,7 @@
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_user_logged_in()) {
+		if (!gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 
@@ -400,7 +400,7 @@
 		}
 
 		// Bail if user is already logged in
-		if (gmt_courses_api_is_user_logged_in()) {
+		if (gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_already_logged_in_response();
 		}
 
@@ -446,7 +446,7 @@
 		}
 
 		// Bail if user is already logged in
-		if (gmt_courses_api_is_user_logged_in()) {
+		if (gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_already_logged_in_response();
 		}
 
@@ -486,7 +486,7 @@
 		}
 
 		// Bail if user is already logged in
-		if (gmt_courses_api_is_user_logged_in()) {
+		if (gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_already_logged_in_response();
 		}
 
@@ -572,16 +572,13 @@
 	 */
 	function gmt_courses_api_get_products ($request) {
 
-		// Get request parameters
-		$params = $request->get_params();
-
 		// Check domain whitelist
 		if (!gmt_courses_api_is_allowed_domain($request)) {
 			return gmt_courses_api_disallowed_response();
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_user_logged_in()) {
+		if (!gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 
@@ -615,7 +612,7 @@
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_user_logged_in()) {
+		if (!gmt_courses_api_is_logged_in()) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 

@@ -11,7 +11,7 @@
 	 */
 	function gmt_courses_api_is_allowed_domain ($request) {
 		$origins = getenv('API_ORIGINS');
-		$origin = $request->get_header('origin');
+		$origin = $request->get_header('host');
 		if (empty($origins) || in_array($origin, explode(',', $origins))) return true;
 		return false;
 	}
