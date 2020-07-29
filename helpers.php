@@ -112,6 +112,7 @@
 					'url' => $session->url,
 					'slack' => $session->slack,
 					'completed' => $session->completed,
+					'lessons' => $session->lessons,
 				);
 			}
 		}
@@ -119,10 +120,14 @@
 		// Get purchased pocket guides
 		foreach($product_data->guides as $key => $guide) {
 			if (in_array($guide->id, $purchases)) {
+				$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3'), $purchases);
+				$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3'), $purchases);
 				$products['guides'][] = array(
 					'id' => $guide->id,
 					'title' => $guide->title,
 					'url' => $guide->url,
+					'lessons' => ($has_video ? $guide->lessons : null),
+					'assets' => ($has_book ? $guide->assets : null),
 				);
 			}
 		}
@@ -134,6 +139,7 @@
 					'id' => $product->id,
 					'title' => $product->title,
 					'url' => $product->url,
+					'assets' => $product->assets,
 				);
 			}
 		}

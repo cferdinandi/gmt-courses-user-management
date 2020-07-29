@@ -96,8 +96,9 @@
 	 */
 	function gmt_courses_api_is_logged_in () {
 		session_start();
-		if (empty($_SESSION['auth_email'])) return false;
-		if (gmt_courses_api_is_token_expired()) return false;
-		$_SESSION['auth_token_last_access'] = time();
-		return true;
+		if (!empty($_SESSION['auth_email']) && !gmt_courses_api_is_token_expired()) {
+			$_SESSION['auth_token_last_access'] = time();
+			return true;
+		}
+		return false;
 	}
