@@ -80,10 +80,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Make sure user isn't already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Make sure account has been validated
 		$user = get_user_by('email', $params['username']);
@@ -117,7 +115,7 @@
 		return new WP_REST_Response(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'You have successfully logged in.'
+			'data' => $session['token']
 		), 200);
 
 	}
@@ -157,10 +155,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Make sure user isn't already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Make sure email address is valid
 		$username = sanitize_email($params['username']);
@@ -256,10 +252,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Make sure user isn't already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Variables
 		$user = get_user_by('email', $params['username']);
@@ -319,7 +313,7 @@
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_logged_in()) {
+		if (!gmt_courses_api_is_authenticated($params['token'])) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 
@@ -399,10 +393,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Bail if user is already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Make sure the user exists
 		$user = get_user_by('email', $params['username']);
@@ -445,10 +437,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Bail if user is already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Variables
 		$user = get_user_by('email', $params['username']);
@@ -485,10 +475,8 @@
 			return gmt_courses_api_disallowed_response();
 		}
 
-		// Bail if user is already logged in
-		if (gmt_courses_api_is_logged_in()) {
-			return gmt_courses_api_already_logged_in_response();
-		}
+		// End existing session, if one exists
+		gmt_courses_api_end_session();
 
 		// Variables
 		$user = get_user_by('email', $params['username']);
@@ -572,13 +560,16 @@
 	 */
 	function gmt_courses_api_get_products ($request) {
 
+		// Get request parameters
+		$params = $request->get_params();
+
 		// Check domain whitelist
 		if (!gmt_courses_api_is_allowed_domain($request)) {
 			return gmt_courses_api_disallowed_response();
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_logged_in()) {
+		if (!gmt_courses_api_is_authenticated($params['token'])) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 
@@ -612,7 +603,7 @@
 		}
 
 		// Make sure the user is logged in
-		if (!gmt_courses_api_is_logged_in()) {
+		if (!gmt_courses_api_is_authenticated($params['token'])) {
 			return gmt_courses_api_not_logged_in_response();
 		}
 

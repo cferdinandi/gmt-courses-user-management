@@ -58,7 +58,6 @@
 
 	/**
 	 * Check if a session token is valid
-	 * @deprecated never used, but may be in the future
 	 * @param  string  $token The session token
 	 * @return boolean        If true, the token is valid
 	 */
@@ -81,6 +80,20 @@
 	}
 
 	/**
+	 * Check if there's an active user session
+	 * @param  string  $token The user session token
+	 * @return boolean        If true, there's a current session
+	 */
+	function gmt_courses_api_is_authenticated ($token) {
+		session_start();
+		if (!empty($_SESSION['auth_email']) && !empty(gmt_courses_api_is_token_valid($token)) && !gmt_courses_api_is_token_expired()) {
+			$_SESSION['auth_token_last_access'] = time();
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Get the user email
 	 * @return string The user email
 	 */
@@ -88,17 +101,4 @@
 		session_start();
 		if (empty($_SESSION['auth_email']) || gmt_courses_api_is_token_expired()) return false;
 		return $_SESSION['auth_email'];
-	}
-
-	/**
-	 * Check if there's an active user session
-	 * @return boolean If true, there's a current session
-	 */
-	function gmt_courses_api_is_logged_in () {
-		session_start();
-		if (!empty($_SESSION['auth_email']) && !gmt_courses_api_is_token_expired()) {
-			$_SESSION['auth_token_last_access'] = time();
-			return true;
-		}
-		return false;
 	}
