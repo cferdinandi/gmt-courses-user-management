@@ -31,4 +31,4 @@
 		wp_redirect($url);
 		exit;
 	}
-	add_action('init', 'gmt_courses_api_redirect_from_front_end');
+	// add_action('init', 'gmt_courses_api_redirect_from_front_end');
