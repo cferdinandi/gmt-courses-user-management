@@ -126,6 +126,7 @@
 					'id' => $guide->id,
 					'title' => $guide->title,
 					'url' => $guide->url,
+					'sourceCode' => $guide->sourceCode,
 					'lessons' => ($has_video ? $guide->lessons : null),
 					'assets' => ($has_book ? $guide->assets : null),
 				);
