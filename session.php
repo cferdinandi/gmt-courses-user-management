@@ -5,21 +5,19 @@
 	 * @return array The session details
 	 */
 	function gmt_courses_api_get_session_options () {
-		return array(
-			'cookie_lifetime' => 60 * 60 * 24 * 14, // 2 weeks
-			'gc_maxlifetime' => 60 * 60 * 24 * 14, // 2 weeks
-		);
+		return [
+			'cookie_lifetime' => 60 * 60 * 24 * 28, // 4 weeks
+			'gc_maxlifetime' => 60 * 60 * 24 * 28, // 4 weeks
+		];
 	}
 
 	/**
 	 * Start a new user session
 	 * @return string The session token
 	 */
-	function gmt_courses_api_start_session ($email, $token) {
+	function gmt_courses_api_start_session ($email) {
 		session_start(gmt_courses_api_get_session_options());
-		if (empty($token)) {
-			$token = wp_generate_password(48, false);
-		}
+		$token = wp_generate_password(48, false);
 		$_SESSION['auth_email'] = $email;
 		$_SESSION['auth_token'] = $token;
 		$_SESSION['auth_token_last_access'] = time();
@@ -45,10 +43,8 @@
 	 */
 	function gmt_courses_api_extend_session () {
 		session_start(gmt_courses_api_get_session_options());
-		$email = $_SESSION['auth_email'];
-		$token = $_SESSION['auth_token'];
-		gmt_courses_api_end_session();
-		gmt_courses_api_start_session($email, $token);
+		if (empty($_SESSION['auth_token_last_access'])) return false;
+		$_SESSION['auth_token_last_access'] = time();
 		return true;
 	}
 
@@ -102,7 +98,7 @@
 	function gmt_courses_api_is_authenticated ($token) {
 		session_start(gmt_courses_api_get_session_options());
 		if (!empty($_SESSION['auth_email']) && !empty(gmt_courses_api_is_token_valid($token)) && !gmt_courses_api_is_token_expired()) {
-			gmt_courses_api_extend_session();
+			$_SESSION['auth_token_last_access'] = time();
 			return true;
 		}
 		return false;
