@@ -27,8 +27,8 @@
 	 */
 	function gmt_courses_api_redirect_from_front_end () {
 		$url = getenv('FRONTEND_URL');
-		if (is_admin() || empty($url) || in_array('wp-json', explode('/', $_SERVER['REQUEST_URI']))) return;
+		if (is_admin() || empty($url) || $GLOBALS['pagenow'] === 'wp-login.php') return;
 		wp_redirect($url);
 		exit;
 	}
-	add_action('init', 'gmt_courses_api_redirect_from_front_end');
+	// add_action('init', 'gmt_courses_api_redirect_from_front_end');
