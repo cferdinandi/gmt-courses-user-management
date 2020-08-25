@@ -24,7 +24,7 @@
 	 * @return boolean          If true, reset key exists
 	 */
 	function gmt_courses_api_is_reset_key ($user, $key, $reset_key) {
-		if (empty($user) || empty($reset_key) || strcmp($params['key'], $reset_key['key']) !== 0) return false;
+		if (empty($user) || empty($reset_key) || strcmp($key, $reset_key) !== 0) return false;
 		return true;
 	}
 
