@@ -1,5 +1,8 @@
 <?php
 
+	// Security
+	if (!defined('ABSPATH')) exit;
+
 
 	//
 	// Responses
@@ -15,18 +18,6 @@
 			'status' => 'disallowed_domain',
 			'message' => 'This domain is not whitelisted.'
 		), 400);
-	}
-
-	/**
-	 * Return an "already logged in" response
-	 * @return WP_REST_Response A WP REST API response object
-	 */
-	function gmt_courses_api_already_logged_in_response () {
-		return new WP_REST_Response(array(
-			'code' => 401,
-			'status' => 'loggedin',
-			'message' => 'You\'re already logged in.'
-		), 401);
 	}
 
 	/**

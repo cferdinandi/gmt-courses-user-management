@@ -1,5 +1,8 @@
 <?php
 
+	// Security
+	if (!defined('ABSPATH')) exit;
+
 	/**
 	 * Create session details
 	 * @return array The session details

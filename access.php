@@ -1,5 +1,8 @@
 <?php
 
+	// Security
+	if (!defined('ABSPATH')) exit;
+
 	/**
 	 * Disable Notifications
 	 * @todo  make these configurable with environment variables
@@ -23,11 +26,29 @@
 
 
 	/**
+	 * Hide default rest API endpoints
+	 */
+	remove_action('rest_api_init', 'create_initial_rest_routes', 99);
+
+
+
+	/**
+	 * Prevent RSS feed caching
+	 * @param  Object $feed The RSS feed
+	 */
+	function gmt_courses_do_not_cache_feeds($feed) {
+		$feed->enable_cache(false);
+	}
+	add_action('wp_feed_options', 'gmt_courses_do_not_cache_feeds');
+
+
+
+	/**
 	 * Redirect users away from the front end
 	 */
 	function gmt_courses_api_redirect_from_front_end () {
 		$url = getenv('FRONTEND_URL');
-		if (is_admin() || empty($url) || in_array('wp-json', explode('/', $_SERVER['REQUEST_URI']))) return;
+		if (is_admin() || empty($url) || $GLOBALS['pagenow'] === 'wp-login.php' || in_array('wp-json', explode('/', $_SERVER['REQUEST_URI'])) || !empty($_GET['feed'])) return;
 		wp_redirect($url);
 		exit;
 	}
