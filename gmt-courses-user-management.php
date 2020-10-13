@@ -29,3 +29,10 @@
 	require_once('emails.php');
 	require_once('ajax.php');
 	require_once('access.php');
+
+	// WP Rest API
+	// @todo remove these
+	require_once('session.php');
+	require_once('helpers-legacy.php');
+	require_once('emails-legacy.php');
+	require_once('api.php');
