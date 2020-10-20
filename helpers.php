@@ -89,7 +89,7 @@
 
 		// Variables
 		$product_data_file = getenv('COURSE_DATA');
-		$user_data = gmt_courses_api_get_user_purchases($email);
+		$user_data = gmt_courses_get_user_purchases($email);
 		$purchases = $user_data->purchases;
 		if (gettype($purchases) === 'object') {
 			$purchases = get_object_vars($purchases);

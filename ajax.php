@@ -190,15 +190,15 @@
 	function gmt_courses_create_user () {
 
 		// Bail if not an Ajax request
-		if (gmt_courses_is_not_ajax()) {
-			header('Location: ' . $_SERVER['HTTP_REFERER']);
-			return;
-		}
+		// if (gmt_courses_is_not_ajax()) {
+		// 	header('Location: ' . $_SERVER['HTTP_REFERER']);
+		// 	return;
+		// }
 
 		// Bail if user is already logged in
-		if (is_user_logged_in()) {
-			gmt_courses_already_logged_in_response();
-		}
+		// if (is_user_logged_in()) {
+		// 	gmt_courses_already_logged_in_response();
+		// }
 
 		// Make sure email address is valid
 		$username = sanitize_email($_POST['username']);
@@ -213,14 +213,14 @@
 		// Get user purchases
 		$products = gmt_courses_get_user_products($username);
 
-		// If user hasn't made any purchases
-		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
-			wp_send_json(array(
-				'code' => 401,
-				'status' => 'failed',
-				'message' => 'Please use the same email address that you used to purchase your courses.',
-			), 401);
-		}
+		// // If user hasn't made any purchases
+		// if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
+		// 	wp_send_json(array(
+		// 		'code' => 401,
+		// 		'status' => 'failed',
+		// 		'message' => 'Please use the same email address that you used to purchase your courses.',
+		// 	), 401);
+		// }
 
 		// If username already exists and is validated
 		if (username_exists($username)) {
@@ -272,10 +272,14 @@
 		// Send validation email
 		gmt_courses_send_validation_email($username, $validation_key);
 
+		// @temp
+		$validate_url = getenv('VALIDATE_URL') . '?email=' . $username . '&key=' . $validation_key;
+
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.'
+			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.',
+			'key' => $validate_url // @temp
 		), 200);
 
 	}
