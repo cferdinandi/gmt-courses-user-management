@@ -213,14 +213,14 @@
 		// Get user purchases
 		$products = gmt_courses_get_user_products($username);
 
-		// // If user hasn't made any purchases
-		// if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
-		// 	wp_send_json(array(
-		// 		'code' => 401,
-		// 		'status' => 'failed',
-		// 		'message' => 'Please use the same email address that you used to purchase your courses.',
-		// 	), 401);
-		// }
+		// If user hasn't made any purchases
+		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
+			wp_send_json(array(
+				'code' => 401,
+				'status' => 'failed',
+				'message' => 'Please use the same email address that you used to purchase your courses.',
+			), 401);
+		}
 
 		// If username already exists and is validated
 		if (username_exists($username)) {
@@ -251,15 +251,19 @@
 		}
 
 		// Create new user
-		$user = wp_create_user($username, $_POST['password'], $username);
+		if (empty($user)) {
 
-		// If account creation fails
-		if (is_wp_error($user)) {
-			wp_send_json(array(
-				'code' => 401,
-				'status' => 'failed',
-				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			$user = wp_create_user($username, $_POST['password'], $username);
+
+			// If account creation fails
+			if (is_wp_error($user)) {
+				wp_send_json(array(
+					'code' => 401,
+					'status' => 'failed',
+					'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
+				), 401);
+			}
+
 		}
 
 		// Add validation key
