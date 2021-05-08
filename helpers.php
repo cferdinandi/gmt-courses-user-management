@@ -112,7 +112,7 @@
 
 		// Get purchased Academy memberships
 		foreach($product_data->academy as $key => $session) {
-			if (in_array($session->id, $purchases)) {
+			if ((is_array($session->id) ? !empty(array_intersect($session->id, $purchases)) : in_array($session->id, $purchases))) {
 				$products['academy'][] = array(
 					'id' => $session->id,
 					'title' => $session->title,
