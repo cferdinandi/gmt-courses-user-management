@@ -114,7 +114,7 @@
 		foreach($product_data->academy as $key => $session) {
 			if ((is_array($session->id) ? !empty(array_intersect($session->id, $purchases)) : in_array($session->id, $purchases))) {
 				$products['academy'][] = array(
-					'id' => $session->id,
+					'id' => (is_array($session->id) ? $session->id[0] : $session->id),
 					'title' => $session->title,
 					'url' => $session->url,
 					'slack' => $session->slack,
