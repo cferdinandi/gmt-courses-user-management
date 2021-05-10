@@ -127,8 +127,8 @@
 		// Get purchased pocket guides
 		foreach($product_data->guides as $key => $guide) {
 			if (in_array($guide->id, $purchases)) {
-				$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3'), $purchases);
-				$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3'), $purchases);
+				$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3', $guide->id . '_4', $guide->id . '_6'), $purchases);
+				$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3', $guide->id . '_5', $guide->id . '_6'), $purchases);
 				$products['guides'][] = array(
 					'id' => $guide->id,
 					'title' => $guide->title,
