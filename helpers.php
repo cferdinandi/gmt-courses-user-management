@@ -82,6 +82,7 @@
 
 	/**
 	 * Get products purchased by the user
+	 * @deprecated 3.4.0 Replaced by gmt_courses_get_user_products() and will be removed in v4.x
 	 * @param  string $email The user's email address
 	 * @return array         The products purchased by the user
 	 */
@@ -156,11 +157,6 @@
 
 	}
 
-
-
-	//
-	// @WIP
-	//
 
 	/**
 	 * Get summary of products purchased by the user

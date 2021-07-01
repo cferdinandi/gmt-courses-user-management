@@ -211,7 +211,7 @@
 		}
 
 		// Get user purchases
-		$products = gmt_courses_get_user_products($username);
+		$products = gmt_courses_get_user_product_summary($username);
 
 		// If user hasn't made any purchases
 		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
@@ -619,6 +619,7 @@
 
 	/**
 	 * Get the courses an already logged in user has access to
+	 * @deprecated 3.4.0 Will be removed in v4.x
 	 */
 	function gmt_courses_get_products () {
 
