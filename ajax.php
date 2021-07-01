@@ -667,7 +667,7 @@
 
 		// Get user purchases
 		$user = wp_get_current_user();
-		$product = ($api === 'summary' ? gmt_courses_get_user_product_summary($user->user_email) : gmt_courses_get_user_product_details ($user->user_email, $type, $api));
+		$product = ($api === 'summary' ? gmt_courses_get_user_product_summary($user->user_email) : gmt_courses_get_user_product_details($user->user_email, $type, $api));
 
 		// If there are no products, show an error
 		if (empty($product)) {
@@ -682,6 +682,7 @@
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
+			'email' => $user->user_email,
 			'data' => $product
 		), 200);
 
@@ -694,6 +695,6 @@
 	 */
 	function gmt_courses_add_product_feed () {
 	    add_feed('gmt-products', 'gmt_courses_get_products');
-	    add_feed('gmt-product_data', 'gmt_courses_get_product_data');
+	    add_feed('gmt-product-data', 'gmt_courses_get_product_data');
 	}
 	add_action('init', 'gmt_courses_add_product_feed');
