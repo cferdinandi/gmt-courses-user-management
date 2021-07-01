@@ -159,6 +159,130 @@
 
 
 	//
+	// @WIP
+	//
+
+	/**
+	 * Get summary of products purchased by the user
+	 * @param  string $email The user's email address
+	 * @return array         The summary of products purchased by the user
+	 */
+	function gmt_courses_get_user_product_summary ($email = '') {
+
+		// Variables
+		$user_data = gmt_courses_get_user_purchases($email);
+		$purchases = $user_data->purchases;
+		if (gettype($purchases) === 'object') {
+			$purchases = get_object_vars($purchases);
+		}
+
+		// Bail if the user has no purchases
+		if (empty($purchases)) return;
+
+		// Get product data
+		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/index.json'), false);
+
+		// Setup products object
+		$products = array(
+			'invoices' => $user_data->invoices,
+			'resources' => $product_data->resources,
+			'academy' => array(),
+			'guides' => array(),
+			'products' => array(),
+		);
+
+		// Get purchased Academy memberships
+		foreach($product_data->academy as $key => $session) {
+			if (in_array($session->id, $purchases) || (!empty($session->monthly) && in_array($session->monthly, $purchases))) {
+				$products['academy'][] = array(
+					'id' => $session->id,
+					'title' => $session->title,
+					'url' => $session->url,
+					'slack' => $session->slack,
+				);
+			}
+		}
+
+		// Get purchased pocket guides
+		foreach($product_data->guides as $key => $guide) {
+			if (in_array($guide->id, $purchases)) {
+				$products['guides'][] = array(
+					'id' => $guide->id,
+					'title' => $guide->title,
+					'url' => $guide->url,
+				);
+			}
+		}
+
+		// Get other purchased products
+		foreach($product_data->products as $key => $product) {
+			if (in_array($product->id, $purchases)) {
+				$products['products'][] = array(
+					'id' => $product->id,
+					'title' => $product->title,
+					'url' => $product->url,
+				);
+			}
+		}
+
+		return $products;
+
+	}
+
+
+	/**
+	 * Get details for product purchased by the user
+	 * @param  string $email The user's email address
+	 * @return array         The products purchased by the user
+	 */
+	function gmt_courses_get_user_product_details ($email = '', $type = '', $api_dir = '') {
+
+		// Ensure correct data provided
+		if (empty($type) || empty($api_dir)) return;
+
+		// Variables
+		$user_data = gmt_courses_get_user_purchases($email);
+		$purchases = $user_data->purchases;
+		if (gettype($purchases) === 'object') {
+			$purchases = get_object_vars($purchases);
+		}
+
+		// Bail if the user has no purchases
+		if (empty($purchases)) return;
+
+		// Get product data
+		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($api_dir, '/') . '/index.json'), false);
+
+		// Make sure user has access to purchase
+		if (
+			(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) ||
+			(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
+		) return;
+
+		// If an Academy sessions
+		if ($type === 'academy' || $type === 'products') {
+			return $product_data;
+		}
+
+		// If a Pocket Guide
+		if ($type === 'guides') {
+			$has_book = array_intersect(array($product_data->id . '_1', $product_data->id . '_3', $product_data->id . '_4', $product_data->id . '_6'), $purchases);
+			$has_video = array_intersect(array($product_data->id . '_2', $product_data->id . '_3', $product_data->id . '_5', $product_data->id . '_6'), $purchases);
+			return array(
+				'id' => $product_data->id,
+				'title' => $product_data->title,
+				'url' => $product_data->url,
+				'sourceCode' => $product_data->sourceCode,
+				'lessons' => ($has_video ? $product_data->lessons : null),
+				'assets' => ($has_book ? $product_data->assets : null),
+			);
+		}
+
+	}
+
+
+
+	//
 	// Utilities
 	//
 
