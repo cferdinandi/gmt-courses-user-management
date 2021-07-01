@@ -251,10 +251,11 @@
 		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($api_dir, '/') . '/index.json'), false);
 
 		// Make sure user has access to purchase
-		if (
-			(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) &&
-			(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
-		) return;
+		if (!in_array($product_data->id, $purchases) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
+		// if (
+		// 	(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) &&
+		// 	(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
+		// ) return;
 
 		// If an Academy sessions
 		if ($type === 'academy' || $type === 'products') {
