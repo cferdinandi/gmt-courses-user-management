@@ -674,7 +674,8 @@
 			wp_send_json(array(
 				'code' => 403,
 				'status' => 'no_access',
-				'message' => 'You don\'t have access to this content. Sorry!'
+				'message' => 'You don\'t have access to this content. Sorry!',
+				'product' => $product,
 			), 403);
 		}
 

@@ -252,7 +252,7 @@
 
 		// Make sure user has access to purchase
 		if (
-			(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) ||
+			(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) &&
 			(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
 		) return;
 
