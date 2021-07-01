@@ -682,7 +682,7 @@
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'email' => $user->user_email,
+			'email' => $api === 'summary' ? $user->user_email : null,
 			'data' => $product
 		), 200);
 
