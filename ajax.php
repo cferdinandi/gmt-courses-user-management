@@ -676,6 +676,7 @@
 				'status' => 'no_access',
 				'message' => 'You don\'t have access to this content. Sorry!',
 				'product' => $product,
+				'user' => $user->user_email,
 			), 403);
 		}
 
