@@ -72,6 +72,7 @@
 						'headers'   => array(
 							'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
 						),
+						'sslverify' => false,
 					)
 				)
 			)
