@@ -195,7 +195,7 @@
 					'title' => $session->title,
 					'url' => $session->url,
 					'slack' => $session->slack,
-					// 'completed' => $session->completed,
+					'completed' => $session->completed,
 				);
 			}
 		}
