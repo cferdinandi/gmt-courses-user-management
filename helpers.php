@@ -195,7 +195,7 @@
 					'title' => $session->title,
 					'url' => $session->url,
 					'slack' => $session->slack,
-					'completed' => $session->completed,
+					// 'completed' => $session->completed,
 				);
 			}
 		}
@@ -259,6 +259,7 @@
 
 		// If an Academy sessions
 		if ($type === 'academy' || $type === 'products') {
+			unset($product_data->monthly);
 			return $product_data;
 		}
 

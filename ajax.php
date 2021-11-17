@@ -695,7 +695,7 @@
 	 * This adds a feed http://example.com/?feed=myfeed
 	 */
 	function gmt_courses_add_product_feed () {
-	    add_feed('gmt-products', 'gmt_courses_get_products');
+	    add_feed('gmt-products', 'gmt_courses_get_products'); // @deprecated
 	    add_feed('gmt-product-data', 'gmt_courses_get_product_data');
 	}
 	add_action('init', 'gmt_courses_add_product_feed');
