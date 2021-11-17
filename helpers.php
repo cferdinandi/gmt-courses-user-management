@@ -259,7 +259,6 @@
 
 		// If an Academy sessions
 		if ($type === 'academy' || $type === 'products') {
-			unset($product_data->monthly);
 			return $product_data;
 		}
 
