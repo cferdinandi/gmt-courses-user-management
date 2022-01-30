@@ -166,8 +166,11 @@
 	 */
 	function gmt_courses_get_user_product_summary ($email = '') {
 
-		// Variables
+		// Get user data
 		$user_data = gmt_courses_get_user_purchases($email);
+		if (empty($user_data) || !property_exists($user_data, 'purchases')) return;
+
+		// Get purchases for user
 		$purchases = $user_data->purchases;
 		if (gettype($purchases) === 'object') {
 			$purchases = get_object_vars($purchases);
