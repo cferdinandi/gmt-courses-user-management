@@ -66,6 +66,16 @@
 		}
 	}
 
+	/**
+	 * Return "internal error" response
+	 */
+	function gmt_courses_internal_error_response () {
+		wp_send_json(array(
+			'code' => 500,
+			'status' => 'failed',
+			'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
+		), 500);
+	}
 
 
 	//
@@ -257,11 +267,7 @@
 
 			// If account creation fails
 			if (is_wp_error($user)) {
-				wp_send_json(array(
-					'code' => 500,
-					'status' => 'failed',
-					'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-				), 500);
+				gmt_courses_internal_error_response();
 			}
 
 		}
@@ -415,11 +421,7 @@
 
 		// If update fails
 		if (is_wp_error($update)) {
-			wp_send_json(array(
-				'code' => 500,
-				'status' => 'failed',
-				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-			), 500);
+			gmt_courses_internal_error_response();
 		}
 
 		// Success!
@@ -578,11 +580,7 @@
 
 		// If update fails
 		if (is_wp_error($update)) {
-			wp_send_json(array(
-				'code' => 500,
-				'status' => 'failed',
-				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-			), 500);
+			gmt_courses_internal_error_response();
 		}
 
 		// Remove the validation key
@@ -661,6 +659,101 @@
 		), 200);
 
 	}
+
+
+	/**
+	 * Send user a Slack invite
+	 */
+	function gmt_courses_slack () {
+
+		// If user isn't logged in, return error
+		if (!is_user_logged_in()) {
+			gmt_courses_not_logged_in_response();
+		}
+
+		// Get Slack credentials
+		$slack_team = getenv('SLACK_TEAM');
+		$slack_token = getenv('SLACK_TOKEN');
+
+		// If there are no Slack credentials, error
+		if (empty($slack_team) || empty($slack_token)) {
+			gmt_courses_internal_error_response();
+		}
+
+		// Get the current user
+		$current_user = wp_get_current_user();
+		$email = $current_user->user_email;
+
+		// Limit to valid EDD purchases only
+		// @TODO write logic
+
+		// Get the channels to add user to
+		// @TODO
+		$channels = array('channels' => '<comma-separated string>');
+
+		// Invite purchaser to Slack
+		$slack = new Slack_Invite($slack_token, $slack_team);
+		$invitation = $slack->send_invite($email, $channels);
+
+		// If invite a success
+		if ($invitation['ok'] === TRUE) {
+			wp_send_json(array(
+				'code' => 200,
+				'status' => 'success',
+				'message' => 'An invitation to join the Slack workspace has been sent.'
+			), 200);
+		}
+
+		// If an invite was already sent
+		if ($invitation['error'] === 'already_invited') {
+			wp_send_json(array(
+				'code' => 400,
+				'status' => 'already_invited',
+				'message' => 'You\'ve already been sent an invite. If you didn\'t receive it, please contact the workspace administrator.'
+			), 400);
+		}
+
+		// If the user is already in the team, add to new channels
+		if ($invitation['error'] === 'already_in_team') {
+			if (!empty($channels)) {
+				$channels = explode(',', $channels['channels']);
+				$member = $slack->get_member($email);
+				$added_to_channels = false;
+				foreach ($channels as $channel) {
+					$add = $slack->add_to_group($member, $channel);
+					if ($add['ok'] === TRUE) {
+						$added_to_channels = true;
+					}
+				}
+
+				// If they were added to at least one new channel
+				if ($added_to_channels === TRUE) {
+					wp_send_json(array(
+						'code' => 200,
+						'status' => 'new_channel',
+						'message' => 'You have been added to a new channel in this workspace.'
+					), 200);
+				}
+			}
+
+			// Otherwise, throw an error
+			wp_send_json(array(
+				'code' => 400,
+				'status' => 'already_in_team',
+				'message' => 'You\'re already a member of this Slack workspace.'
+			), 400);
+		}
+
+		// Catchall error
+		wp_send_json(array(
+			'code' => 500,
+			'status' => 'failed',
+			'message' => 'Unable to subscribe at this time. Please try again.'
+		), 500);
+
+	}
+	add_action('wp_ajax_gmt_courses_slack', 'gmt_courses_slack');
+	add_action('wp_ajax_nopriv_gmt_courses_slack', 'gmt_courses_slack');
 
 
 	/**

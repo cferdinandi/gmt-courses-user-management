@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * GitHub Plugin URI: https://github.com/cferdinandi/gmt-courses-user-management/
  * Description: User processes for GMT Courses.
- * Version: 3.5.7
+ * Version: 4.0.0
  * Author: Chris Ferdinandi
  * Author URI: http://gomakethings.com
  * License: GPLv3
@@ -26,6 +26,7 @@
 
 	// WP Ajax
 	require_once('helpers.php');
+    require_once('slack.php');
 	require_once('emails.php');
 	require_once('ajax.php');
 	require_once('access.php');
