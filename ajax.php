@@ -13,10 +13,10 @@
 	 */
 	function gmt_courses_already_logged_in_response () {
 		wp_send_json(array(
-			'code' => 401,
+			'code' => 400,
 			'status' => 'loggedin',
 			'message' => 'You\'re already logged in.'
-		), 401);
+		), 400);
 	}
 
 	/**
@@ -35,10 +35,10 @@
 	 */
 	function gmt_courses_invalid_key_response () {
 		wp_send_json(array(
-			'code' => 401,
+			'code' => 400,
 			'status' => 'failed',
 			'message' => 'This password reset link is no longer valid. Please try again. If you keep getting this message, please email ' . gmt_courses_get_email() . '.'
-		), 401);
+		), 400);
 	}
 
 	/**
@@ -46,10 +46,10 @@
 	 */
 	function gmt_courses_key_expired_response () {
 		wp_send_json(array(
-			'code' => 401,
+			'code' => 400,
 			'status' => 'failed',
 			'message' => 'This password reset link has expired. Please request a new one. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
-		), 401);
+		), 400);
 	}
 
 	/**
@@ -59,10 +59,10 @@
 		$pw_length = gmt_courses_get_pw_length();
 		if (strlen($pw) < $pw_length) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter a new password that\'s at least ' . $pw_length . ' characters long.'
-			), 401);
+			), 400);
 		}
 	}
 
@@ -123,10 +123,10 @@
 		$user = get_user_by('email', $_POST['username']);
 		if (!empty(get_user_meta($user->ID, 'user_validation_key', true))) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please validate your account using the link in the email that was sent to you. If you never received a validation link, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 400);
 		}
 
 		// Authenticate User
@@ -140,10 +140,10 @@
 		// If authentication fails
 		if (is_wp_error($login)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'The username or password you provided is not valid.'
-			), 401);
+			), 400);
 		}
 
 		// Send success message
@@ -204,10 +204,10 @@
 		$username = sanitize_email($_POST['username']);
 		if ($username !== $_POST['username']) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please use a valid email address.',
-			), 401);
+			), 400);
 		}
 
 		// Get user purchases
@@ -216,10 +216,10 @@
 		// If user hasn't made any purchases
 		if (empty($products) || (empty($products['guides']) && empty($products['academy']) && empty($products['products']))) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please use the same email address that you used to purchase your courses.',
-			), 401);
+			), 400);
 		}
 
 		// If username already exists and is validated
@@ -232,10 +232,10 @@
 			// If not awaiting validation, throw an error
 			if (empty($validation)) {
 				wp_send_json(array(
-					'code' => 401,
+					'code' => 400,
 					'status' => 'failed',
 					'message' => 'An account already exists for this email address. If you need to reset your password, please email ' . gmt_courses_get_email() . '.'
-				), 401);
+				), 400);
 			}
 
 		}
@@ -244,10 +244,10 @@
 		$pw_length = gmt_courses_get_pw_length();
 		if (gmt_courses_is_pw_too_short($_POST['password'], $pw_length)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please use a password that\'s at least ' . $pw_length . ' characters long.'
-			), 401);
+			), 400);
 		}
 
 		// Create new user
@@ -258,10 +258,10 @@
 			// If account creation fails
 			if (is_wp_error($user)) {
 				wp_send_json(array(
-					'code' => 401,
+					'code' => 500,
 					'status' => 'failed',
 					'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-				), 401);
+				), 500);
 			}
 
 		}
@@ -315,28 +315,28 @@
 		// If user exists but there's no validation key, let them know account already verified
 		if (!empty($user) && empty($validation)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'This account has already been validated. <a href="/">Please login</a> to access your courses. If you don\'t know your password or feel this is an error, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 400);
 		}
 
 		// If validation fails
 		if (empty($user) || empty($validation) || strcmp($_POST['key'], $validation['key']) !== 0) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'This validation link is not valid. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 400);
 		}
 
 		// If validation key has expired, ask them to try again
 		if (time() > $validation['expires']) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'This validation link has expired. Please <a href="' . $signup_url . '">try creating an account again</a>. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 400);
 		}
 
 		// Remove the validation key
@@ -376,38 +376,38 @@
 		// Check that current password is supplied
 		if (empty($_POST['current_password'])) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter your current password.'
-			), 401);
+			), 400);
 		}
 
 		// Check that new password is provided
 		if (empty($_POST['new_password'])) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter a new password.'
-			), 401);
+			), 400);
 		}
 
 		// Validate and authenticate current password
 		if (!wp_check_password($_POST['current_password'], $current_user->user_pass, $current_user->ID)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'The password you provided is incorrect.'
-			), 401);
+			), 400);
 		}
 
 		// Enforce password requirements
 		$pw_length = gmt_courses_get_pw_length();
 		if (gmt_courses_is_pw_too_short($_POST['new_password'], $pw_length)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter a new password that\'s at least ' . $pw_length . ' characters long.'
-			), 401);
+			), 400);
 		}
 
 		// Update the password
@@ -416,10 +416,10 @@
 		// If update fails
 		if (is_wp_error($update)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 500,
 				'status' => 'failed',
 				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 500);
 		}
 
 		// Success!
@@ -454,10 +454,10 @@
 		$user = get_user_by('email', $_POST['username']);
 		if (empty($user)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter the email address associated with your account. If you don\'t remember what it is, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 400);
 		}
 
 		// Add reset validation key
@@ -557,20 +557,20 @@
 		// Check that password is supplied
 		if (empty($_POST['password'])) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter a new password.'
-			), 401);
+			), 400);
 		}
 
 		// Enforce password requirements
 		$pw_length = gmt_courses_get_pw_length();
 		if (strlen($_POST['password']) < $pw_length) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 400,
 				'status' => 'failed',
 				'message' => 'Please enter a new password that\'s at least ' . $pw_length . ' characters long.'
-			), 401);
+			), 400);
 		}
 
 		// Update the password
@@ -579,10 +579,10 @@
 		// If update fails
 		if (is_wp_error($update)) {
 			wp_send_json(array(
-				'code' => 401,
+				'code' => 500,
 				'status' => 'failed',
 				'message' => 'Something went wrong. Please try again. If you continue to see this message, please email ' . gmt_courses_get_email() . '.'
-			), 401);
+			), 500);
 		}
 
 		// Remove the validation key
@@ -615,33 +615,6 @@
 	}
 	add_action('wp_ajax_gmt_courses_reset_password', 'gmt_courses_reset_password');
 	add_action('wp_ajax_nopriv_gmt_courses_reset_password', 'gmt_courses_reset_password');
-
-
-	/**
-	 * Get the courses an already logged in user has access to
-	 * @deprecated 3.4.0 Will be removed in v4.x
-	 */
-	function gmt_courses_get_products () {
-
-		if (!is_user_logged_in()) {
-			gmt_courses_not_logged_in_response();
-		}
-
-		// Get user purchases
-		$user = wp_get_current_user();
-		$products = gmt_courses_get_user_products($user->user_email);
-
-		// Send data back
-		wp_send_json(array(
-			'code' => 200,
-			'status' => 'success',
-			'email' => $user->user_email,
-			'data' => $products
-		), 200);
-
-	}
-	// add_action('wp_ajax_gmt_courses_get_products', 'gmt_courses_get_products');
-	// add_action('wp_ajax_nopriv_gmt_courses_get_products', 'gmt_courses_get_products');
 
 
 	/**
