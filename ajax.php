@@ -124,9 +124,9 @@
 			return;
 		}
 
-		// Make sure user isn't already logged in
+		// If the user is already logged in, log them out
 		if (is_user_logged_in()) {
-			gmt_courses_already_logged_in_response();
+			wp_logout();
 		}
 
 		// Make sure account has been validated
@@ -282,14 +282,11 @@
 		// Send validation email
 		gmt_courses_send_validation_email($username, $validation_key);
 
-		// @temp
-		$validate_url = getenv('VALIDATE_URL') . '?email=' . $username . '&key=' . $validation_key;
-
+		// Respond with success
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
 			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.',
-			'key' => $validate_url // @temp
 		), 200);
 
 	}
@@ -685,11 +682,17 @@
 		$email = $current_user->user_email;
 
 		// Limit to valid EDD purchases only
-		// @TODO write logic
+		$products = gmt_courses_get_user_product_summary($email);
+		if (empty($products['slack'])) {
+			wp_send_json(array(
+				'code' => 403,
+				'status' => 'forbidden',
+				'message' => 'You don\'t have access to Slack at this time.'
+			), 403);
+		}
 
 		// Get the channels to add user to
-		// @TODO
-		$channels = array('channels' => '<comma-separated string>');
+		$channels = gmt_courses_get_slack_channels($products);
 
 		// Invite purchaser to Slack
 		$slack = new Slack_Invite($slack_token, $slack_team);
