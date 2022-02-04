@@ -121,7 +121,7 @@
 					'id' => $session->id,
 					'title' => $session->title,
 					'url' => $session->url,
-					// 'slack' => $session->slack,
+					'slack' => $session->slack, // Do not delete - used for Slack access
 					'completed' => $session->completed,
 				);
 			}
@@ -149,7 +149,7 @@
 			}
 		}
 
-		// Check for slack access
+		// Check for Slack access
 		if (!empty($products['academy'])) {
 			$products['slack'] = true;
 		} else {
@@ -157,6 +157,15 @@
 				if (in_array($product_id, $purchases)) {
 					$products['slack'] = true;
 					break;
+				}
+			}
+		}
+
+		// Remove Slack from resources if user doesn't have access
+		if (empty($products['slack'])) {
+			foreach ($products['resources'] as $index => $resource) {
+				if (str_contains($resources->url, 'slack')) {
+					unset($products['resources'][$index]);
 				}
 			}
 		}
@@ -191,10 +200,6 @@
 
 		// Make sure user has access to purchase
 		if (!in_array($product_data->id, $purchases) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
-		// if (
-		// 	(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) &&
-		// 	(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
-		// ) return;
 
 		// If an Academy sessions
 		if ($type === 'academy' || $type === 'products') {

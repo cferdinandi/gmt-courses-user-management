@@ -349,7 +349,7 @@
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'Your account was successfully validated. <a href="/">Please login</a> to access your courses.'
+			'message' => 'Your account was successfully validated. <a href="/login">Please login</a> to access your courses.'
 		), 200);
 
 	};
@@ -764,7 +764,6 @@
 	 * This adds a feed http://example.com/?feed=myfeed
 	 */
 	function gmt_courses_add_product_feed () {
-	    add_feed('gmt-products', 'gmt_courses_get_products'); // @deprecated
 	    add_feed('gmt-product-data', 'gmt_courses_get_product_data');
 	}
 	add_action('init', 'gmt_courses_add_product_feed');
