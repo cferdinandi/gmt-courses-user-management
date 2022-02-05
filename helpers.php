@@ -82,84 +82,6 @@
 
 
 	/**
-	 * Get products purchased by the user
-	 * @deprecated 3.4.0 Replaced by gmt_courses_get_user_products() and will be removed in v4.x
-	 * @param  string $email The user's email address
-	 * @return array         The products purchased by the user
-	 */
-	function gmt_courses_get_user_products ($email = '') {
-
-		// Variables
-		$product_data_file = getenv('COURSE_DATA');
-		$user_data = gmt_courses_get_user_purchases($email);
-		$purchases = $user_data->purchases;
-		if (gettype($purchases) === 'object') {
-			$purchases = get_object_vars($purchases);
-		}
-
-		// Bail if the user has no purchases
-		if (empty($purchases)) return;
-
-		// Get product data
-		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($product_data_file, '/'), true));
-
-		// Setup products object
-		$products = array(
-			'invoices' => $user_data->invoices,
-			'resources' => $product_data->resources,
-			'academy' => array(),
-			'guides' => array(),
-			'products' => array(),
-		);
-
-		// Get purchased Academy memberships
-		foreach($product_data->academy as $key => $session) {
-			if (in_array($session->id, $purchases) || (!empty($session->monthly) && in_array($session->monthly, $purchases))) {
-				$products['academy'][] = array(
-					'id' => $session->id,
-					'title' => $session->title,
-					'url' => $session->url,
-					'slack' => $session->slack,
-					'completed' => $session->completed,
-					'lessons' => $session->lessons,
-				);
-			}
-		}
-
-		// Get purchased pocket guides
-		foreach($product_data->guides as $key => $guide) {
-			if (in_array($guide->id, $purchases)) {
-				$has_book = array_intersect(array($guide->id . '_1', $guide->id . '_3', $guide->id . '_4', $guide->id . '_6'), $purchases);
-				$has_video = array_intersect(array($guide->id . '_2', $guide->id . '_3', $guide->id . '_5', $guide->id . '_6'), $purchases);
-				$products['guides'][] = array(
-					'id' => $guide->id,
-					'title' => $guide->title,
-					'url' => $guide->url,
-					'sourceCode' => $guide->sourceCode,
-					'lessons' => ($has_video ? $guide->lessons : null),
-					'assets' => ($has_book ? $guide->assets : null),
-				);
-			}
-		}
-
-		// Get other purchased products
-		foreach($product_data->products as $key => $product) {
-			if (in_array($product->id, $purchases)) {
-				$products['products'][] = array(
-					'id' => $product->id,
-					'title' => $product->title,
-					'url' => $product->url,
-					'assets' => $product->assets,
-				);
-			}
-		}
-
-		return $products;
-
-	}
-
-
-	/**
 	 * Get summary of products purchased by the user
 	 * @param  string $email The user's email address
 	 * @return array         The summary of products purchased by the user
@@ -189,6 +111,7 @@
 			'academy' => array(),
 			'guides' => array(),
 			'products' => array(),
+			'slack' => false,
 		);
 
 		// Get purchased Academy memberships
@@ -198,7 +121,7 @@
 					'id' => $session->id,
 					'title' => $session->title,
 					'url' => $session->url,
-					'slack' => $session->slack,
+					'slack' => $session->slack, // Do not delete - used for Slack access
 					'completed' => $session->completed,
 				);
 			}
@@ -223,6 +146,27 @@
 					'title' => $product->title,
 					'url' => $product->url,
 				);
+			}
+		}
+
+		// Check for Slack access
+		if (!empty($products['academy'])) {
+			$products['slack'] = true;
+		} else {
+			foreach($product_data->slack as $product_id) {
+				if (in_array($product_id, $purchases)) {
+					$products['slack'] = true;
+					break;
+				}
+			}
+		}
+
+		// Remove Slack from resources if user doesn't have access
+		if (empty($products['slack'])) {
+			foreach ($products['resources'] as $index => $resource) {
+				if (str_contains($resources->url, 'slack')) {
+					unset($products['resources'][$index]);
+				}
 			}
 		}
 
@@ -256,14 +200,11 @@
 
 		// Make sure user has access to purchase
 		if (!in_array($product_data->id, $purchases) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
-		// if (
-		// 	(!in_array($product_data->id, $purchases) && empty($product_data->monthly)) &&
-		// 	(!empty($product_data->monthly) && !in_array($product_data->monthly, $purchases))
-		// ) return;
 
 		// If an Academy sessions
 		if ($type === 'academy' || $type === 'products') {
 			unset($product_data->monthly);
+			unset($product_data->slack);
 			return $product_data;
 		}
 
@@ -280,6 +221,28 @@
 				'assets' => ($has_book ? $product_data->assets : null),
 			);
 		}
+
+	}
+
+
+	/**
+	 * Get special Slack channels for Academy
+	 * @param  Object $products The user's product data
+	 * @return Array            The Slack channels
+	 */
+	function gmt_courses_get_slack_channels ($products) {
+
+		// If user doesn't have academy, no special channels to add
+		if (empty($products) || empty($products['academy'])) return array();
+
+		// Get Academy channels
+		$channels = array();
+		foreach($products['academy'] as $session) {
+			if ($session->completed) continue;
+			$channels[] = $session->slack;
+		}
+
+		return empty($channels) ? $channels : array('channels' => implode(',', $channels));
 
 	}
 

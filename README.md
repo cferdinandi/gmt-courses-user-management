@@ -14,6 +14,8 @@ SetEnv MIN_PASSWORD_LENGTH <min-password-length>
 SetEnv RESET_PW_URL <url-for-password-reset-form>
 SetEnv FRONTEND_URL <url-for-the-frontend> # if you want to redirect users away
 SetEnv API_ORIGINS <url-for-whitelist-origin>
+SetEnv SLACK_TEAM <slack-team-name>
+SetEnv SLACK_TOKEN <slack-api-token>
 ```
 
 
@@ -61,3 +63,4 @@ fetch('/wp-admin/admin-ajax.php', {
 - `gmt_courses_lost_password` - Send a lost password reset email.
 - `gmt_courses_reset_password` - Reset a lost password.
 - `gmt_courses_is_reset_key_valid` - Check if a reset key is valid.
+- `gmt_courses_slack` - Register a user with Slack.
