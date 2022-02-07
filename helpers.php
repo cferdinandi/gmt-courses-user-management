@@ -122,15 +122,33 @@
 		if ($subscription->status !== 'failing') return null;
 
 		// For PayPal
-		if (str_contains($subscription->gateway, 'paypal')) {
+		if (strpos($subscription->gateway, 'paypal') > -1) {
 			return 'Please update your payment settings in PayPal';
 		}
 
 		// For Stripe
-		if (str_contains($subscription->gateway, 'stripe')) {
-
+		if (strpos($subscription->gateway, 'stripe') > -1) {
+			$notes = array_reverse(explode("\n\n", $subscription->notes));
+			foreach ($notes as $note) {
+				if (strpos($note, 'Failing invoice URL:') < 0) continue;
+				$url = explode('Failing invoice URL: ', $note);
+				if (!empty($url[1])) return $url[1];
+			}
 		}
 
+		return null;
+
+	}
+
+	/**
+	 * Get the formatted gateway name
+	 * @param  String $gateway The gateway
+	 * @return String          The gateway name
+	 */
+	function gmt_courses_get_subscription_gateway ($gateway) {
+		if (strpos($gateway, 'paypal') > -1) return 'PayPal';
+		if (strpos($gateway, 'stripe') > -1) return 'credit card';
+		return ucwords($gateway);
 	}
 
 	/**
@@ -151,9 +169,9 @@
 				'status' => $subscription->status,
 				'amount' => $subscription->recurring_amount,
 				'product' => $subscription->product,
-				'gateway' => $subscription->gateway,
+				'gateway' => gmt_courses_get_subscription_gateway($subscription->gateway),
 				'billTimes' => $subscription->bill_times,
-				'timesBilled' => $subscription->times_billed,
+				'timesBilled' => strval($subscription->times_billed),
 				'failURL' => gmt_courses_get_failed_subscription_link($subscription),
 			);
 		}
@@ -259,7 +277,7 @@
 		// Remove Slack from resources if user doesn't have access
 		if (empty($products['slack'])) {
 			foreach ($products['resources'] as $index => $resource) {
-				if (str_contains($resources->url, 'slack')) {
+				if (strpos($resources->url, 'slack') > -1) {
 					unset($products['resources'][$index]);
 				}
 			}
