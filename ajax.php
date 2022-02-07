@@ -613,52 +613,6 @@
 
 
 	/**
-	 * Get the details for a course for a logged in user
-	 */
-	function gmt_courses_get_product_data () {
-
-		// If user isn't logged in, return error
-		if (!is_user_logged_in()) {
-			gmt_courses_not_logged_in_response();
-		}
-
-		// Get endpoint
-		$api = $_GET['api'];
-		$type = $_GET['type'];
-		if (empty($api) || empty($type)) {
-			wp_send_json(array(
-				'code' => 400,
-				'status' => 'bad_request',
-				'message' => 'Something went wrong. Please email ' . gmt_courses_get_email() . '.'
-			), 400);
-		}
-
-		// Get user purchases
-		$user = wp_get_current_user();
-		$product = ($api === 'summary' ? gmt_courses_get_user_product_summary($user->user_email) : gmt_courses_get_user_product_details($user->user_email, $type, $api));
-
-		// If there are no products, show an error
-		if (empty($product)) {
-			wp_send_json(array(
-				'code' => 403,
-				'status' => 'no_access',
-				'message' => 'You don\'t have access to this content. Sorry!',
-				'product' => $product,
-			), 403);
-		}
-
-		// Send data back
-		wp_send_json(array(
-			'code' => 200,
-			'status' => 'success',
-			'email' => $api === 'summary' ? $user->user_email : null,
-			'data' => $product
-		), 200);
-
-	}
-
-
-	/**
 	 * Send user a Slack invite
 	 */
 	function gmt_courses_slack () {
@@ -759,11 +713,108 @@
 	add_action('wp_ajax_nopriv_gmt_courses_slack', 'gmt_courses_slack');
 
 
+	// /**
+	//  * Get the details for a course for a logged in user
+	//  */
+	// function gmt_courses_get_product_data () {
+
+	// 	// If user isn't logged in, return error
+	// 	if (!is_user_logged_in()) {
+	// 		gmt_courses_not_logged_in_response();
+	// 	}
+
+	// 	// Get endpoint
+	// 	$api = $_GET['api'];
+	// 	$type = $_GET['type'];
+	// 	if (empty($api) || empty($type)) {
+	// 		wp_send_json(array(
+	// 			'code' => 400,
+	// 			'status' => 'bad_request',
+	// 			'message' => 'Something went wrong. Please email ' . gmt_courses_get_email() . '.'
+	// 		), 400);
+	// 	}
+
+	// 	// Get user purchases
+	// 	$user = wp_get_current_user();
+	// 	$product = ($api === 'summary' ? gmt_courses_get_user_product_summary($user->user_email) : gmt_courses_get_user_product_details($user->user_email, $type, $api));
+
+	// 	// If there are no products, show an error
+	// 	if (empty($product)) {
+	// 		wp_send_json(array(
+	// 			'code' => 403,
+	// 			'status' => 'no_access',
+	// 			'message' => 'You don\'t have access to this content. Sorry!',
+	// 		), 403);
+	// 	}
+
+	// 	// Send data back
+	// 	wp_send_json(array(
+	// 		'code' => 200,
+	// 		'status' => 'success',
+	// 		'email' => $api === 'summary' ? $user->user_email : null,
+	// 		'data' => $product
+	// 	), 200);
+
+	// }
+
+	/**
+	 * Get the details for a course for a logged in user
+	 */
+	function gmt_courses_get_product_data () {
+
+		// If user isn't logged in, return error
+		if (!is_user_logged_in()) {
+			gmt_courses_not_logged_in_response();
+		}
+
+		// Get endpoint
+		$api = $_GET['api'];
+		$type = $_GET['type'];
+		if (empty($api) || empty($type)) {
+			wp_send_json(array(
+				'code' => 400,
+				'status' => 'bad_request',
+				'message' => 'Something went wrong. Please email ' . gmt_courses_get_email() . '.'
+			), 400);
+		}
+
+		// Get user data
+		$user = wp_get_current_user();
+		$data = null;
+		if ($api === 'summary') {
+			$data = gmt_courses_get_user_product_summary($user->user_email);
+		} else if ($api === 'invoices') {
+			$data = gmt_courses_get_user_invoices($user->user_email);
+		} else if ($api === 'subscriptions') {
+			$data = gmt_courses_get_user_subscriptions($user->user_email);
+		} else {
+			$data = gmt_courses_get_user_product_details($user->user_email, $type, $api);
+		}
+
+		// If there's no data, show an error
+		if (empty($data)) {
+			wp_send_json(array(
+				'code' => 403,
+				'status' => 'no_access',
+				'message' => 'You don\'t have access to this content. Sorry!',
+			), 403);
+		}
+
+		// Send data back
+		wp_send_json(array(
+			'code' => 200,
+			'status' => 'success',
+			'data' => $data
+		), 200);
+
+	}
+
+
 	/**
 	 * Add a custom product feed
 	 * This adds a feed http://example.com/?feed=myfeed
 	 */
 	function gmt_courses_add_product_feed () {
-	    add_feed('gmt-product-data', 'gmt_courses_get_product_data');
+		add_feed('gmt-product-data', 'gmt_courses_get_product_data');
 	}
 	add_action('init', 'gmt_courses_add_product_feed');

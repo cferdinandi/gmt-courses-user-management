@@ -82,7 +82,51 @@
 
 
 	/**
+	 * Get a list of subscriptions for a user
+	 * @param  string $email The user's email address
+	 * @return array         The user's subscriptions
+	 */
+	function gmt_courses_get_user_subscriptions ($email = '') {
+
+		// Variables
+		$checkout_url = getenv('CHECKOUT_URL');
+		$checkout_username = getenv('CHECKOUT_USERNAME');
+		$checkout_pw = getenv('CHECKOUT_PW');
+
+		// Get user purchases
+		return json_decode(
+			wp_remote_retrieve_body(
+				wp_remote_request(
+					rtrim($checkout_url, '/') . '/wp-json/gmt-edd/v1/subscriptions/' . $email,
+					array(
+						'method'    => 'GET',
+						'headers'   => array(
+							'Authorization' => 'Basic ' . base64_encode($checkout_username . ':' . $checkout_pw),
+						),
+						'sslverify' => false,
+					)
+				)
+			)
+		);
+
+	}
+
+
+	/**
 	 * Get summary of products purchased by the user
+	 * @param  string $email The user's email address
+	 * @return array         The summary of products purchased by the user
+	 */
+	function gmt_courses_get_user_invoices ($email = '') {
+		$user_data = gmt_courses_get_user_purchases($email);
+		if (empty($user_data) || !property_exists($user_data, 'invoices')) return;
+		return $user_data->invoices;
+	}
+
+
+	/**
+	 * Get summary of products purchased by the user
+	 * @todo Remove invoices from this
 	 * @param  string $email The user's email address
 	 * @return array         The summary of products purchased by the user
 	 */
@@ -201,8 +245,8 @@
 		// Make sure user has access to purchase
 		if (!in_array($product_data->id, $purchases) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
 
-		// If an Academy sessions
-		if ($type === 'academy' || $type === 'products') {
+		// If not pocket guides
+		if ($type !== 'guides') {
 			unset($product_data->monthly);
 			unset($product_data->slack);
 			return $product_data;
