@@ -82,11 +82,11 @@
 
 
 	/**
-	 * Get a list of subscriptions for a user
+	 * Get subscription data for a user
 	 * @param  string $email The user's email address
-	 * @return array         The user's subscriptions
+	 * @return array         The user's subscription data
 	 */
-	function gmt_courses_get_user_subscriptions ($email = '') {
+	function gmt_courses_get_user_subscription_data ($email = '') {
 
 		// Variables
 		$checkout_url = getenv('CHECKOUT_URL');
@@ -108,6 +108,57 @@
 				)
 			)
 		);
+
+	}
+
+	/**
+	 * Get the update link for a failed subscription
+	 * @param  Object $subscription The subscription data
+	 * @return String               The subscription link
+	 */
+	function gmt_courses_get_failed_subscription_link ($subscription) {
+
+		// Only run for failing subscriptions
+		if ($subscription->status !== 'failing') return null;
+
+		// For PayPal
+		if (str_contains($subscription->gateway, 'paypal')) {
+			return 'Please update your payment settings in PayPal';
+		}
+
+		// For Stripe
+		if (str_contains($subscription->gateway, 'stripe')) {
+
+		}
+
+	}
+
+	/**
+	 * Get a list of subscriptions for a user
+	 * @param  string $email The user's email address
+	 * @return array         The user's subscriptions
+	 */
+	function gmt_courses_get_user_subscriptions ($email = '') {
+
+		// Get subscription data
+		$subscription_data = gmt_courses_get_user_subscription_data($email);
+		if (empty($subscription_data)) return;
+
+		// Create subscription list
+		$subscriptions = array();
+		foreach ($subscription_data as $index => $subscription) {
+			$subscriptions[] = array(
+				'status' => $subscription->status,
+				'amount' => $subscription->recurring_amount,
+				'product' => $subscription->product,
+				'gateway' => $subscription->gateway,
+				'billTimes' => $subscription->bill_times,
+				'timesBilled' => $subscription->times_billed,
+				'failURL' => gmt_courses_get_failed_subscription_link($subscription),
+			);
+		}
+
+		return $subscriptions;
 
 	}
 
