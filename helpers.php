@@ -160,7 +160,7 @@
 
 		// Get subscription data
 		$subscription_data = gmt_courses_get_user_subscription_data($email);
-		if (empty($subscription_data)) return;
+		if (is_null($subscription_data)) return;
 
 		// Create subscription list
 		$subscriptions = array();
@@ -219,9 +219,9 @@
 
 		// Setup products object
 		$products = array(
-			'invoices' => $user_data->invoices,
 			'resources' => $product_data->resources,
 			'academy' => array(),
+			'projects' => array(),
 			'guides' => array(),
 			'products' => array(),
 			'slack' => false,
@@ -236,6 +236,17 @@
 					'url' => $session->url,
 					'slack' => $session->slack, // Do not delete - used for Slack access
 					'completed' => $session->completed,
+				);
+			}
+		}
+
+		// Get purchased projects
+		foreach($product_data->projects as $key => $project) {
+			if (in_array($project->id, $purchases)) {
+				$products['projects'][] = array(
+					'id' => $project->id,
+					'title' => $project->title,
+					'url' => $project->url,
 				);
 			}
 		}

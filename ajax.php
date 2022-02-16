@@ -200,10 +200,10 @@
 	function gmt_courses_create_user () {
 
 		// Bail if not an Ajax request
-		// if (gmt_courses_is_not_ajax()) {
-		// 	header('Location: ' . $_SERVER['HTTP_REFERER']);
-		// 	return;
-		// }
+		if (gmt_courses_is_not_ajax()) {
+			header('Location: ' . $_SERVER['HTTP_REFERER']);
+			return;
+		}
 
 		// Bail if user is already logged in
 		// if (is_user_logged_in()) {
@@ -713,50 +713,6 @@
 	add_action('wp_ajax_nopriv_gmt_courses_slack', 'gmt_courses_slack');
 
 
-	// /**
-	//  * Get the details for a course for a logged in user
-	//  */
-	// function gmt_courses_get_product_data () {
-
-	// 	// If user isn't logged in, return error
-	// 	if (!is_user_logged_in()) {
-	// 		gmt_courses_not_logged_in_response();
-	// 	}
-
-	// 	// Get endpoint
-	// 	$api = $_GET['api'];
-	// 	$type = $_GET['type'];
-	// 	if (empty($api) || empty($type)) {
-	// 		wp_send_json(array(
-	// 			'code' => 400,
-	// 			'status' => 'bad_request',
-	// 			'message' => 'Something went wrong. Please email ' . gmt_courses_get_email() . '.'
-	// 		), 400);
-	// 	}
-
-	// 	// Get user purchases
-	// 	$user = wp_get_current_user();
-	// 	$product = ($api === 'summary' ? gmt_courses_get_user_product_summary($user->user_email) : gmt_courses_get_user_product_details($user->user_email, $type, $api));
-
-	// 	// If there are no products, show an error
-	// 	if (empty($product)) {
-	// 		wp_send_json(array(
-	// 			'code' => 403,
-	// 			'status' => 'no_access',
-	// 			'message' => 'You don\'t have access to this content. Sorry!',
-	// 		), 403);
-	// 	}
-
-	// 	// Send data back
-	// 	wp_send_json(array(
-	// 		'code' => 200,
-	// 		'status' => 'success',
-	// 		'email' => $api === 'summary' ? $user->user_email : null,
-	// 		'data' => $product
-	// 	), 200);
-
-	// }
-
 	/**
 	 * Get the details for a course for a logged in user
 	 */
@@ -792,7 +748,7 @@
 		}
 
 		// If there's no data, show an error
-		if (empty($data)) {
+		if (is_null($data)) {
 			wp_send_json(array(
 				'code' => 403,
 				'status' => 'no_access',
