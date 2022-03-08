@@ -221,7 +221,6 @@
 		$products = array(
 			'resources' => $product_data->resources,
 			'academy' => array(),
-			'projects' => array(),
 			'guides' => array(),
 			'products' => array(),
 			'slack' => false,
@@ -236,17 +235,6 @@
 					'url' => $session->url,
 					'slack' => $session->slack, // Do not delete - used for Slack access
 					'completed' => $session->completed,
-				);
-			}
-		}
-
-		// Get purchased projects
-		foreach($product_data->projects as $key => $project) {
-			if (in_array($project->id, $purchases)) {
-				$products['projects'][] = array(
-					'id' => $project->id,
-					'title' => $project->title,
-					'url' => $project->url,
 				);
 			}
 		}
