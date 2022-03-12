@@ -9,6 +9,7 @@
 	 * @param  Object $user The user data
 	 */
 	function gmt_courses_validate_user_field ( $user ) {
+		$validated = empty(get_user_meta($user->ID, 'user_validation_key')) ? true : false;
 
 		?>
 		<h3><?php _e('Courses Account Management', 'gmt_courses'); ?></h3>
@@ -18,8 +19,8 @@
 					<th><?php _e('Validate Account', 'gmt_courses'); ?></th>
 					<td>
 						<label for="gmt_courses_validate_user">
-							<input type="checkbox" name="gmt_courses_validate_user" id="gmt_courses_validate_user">
-							<?php _e('Validate the user', 'gmt_courses'); ?>
+							<input type="checkbox" name="gmt_courses_validate_user" id="gmt_courses_validate_user" <?php checked( $validated, true ); ?>>
+							<?php _e('Account validated', 'gmt_courses'); ?>
 						</label>
 					</td>
 				</tr>
