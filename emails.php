@@ -17,7 +17,7 @@
 		$domain = gmt_courses_get_site_domain();
 		$headers = 'From: ' . $site_name . ' <donotreply@' . $domain . '>' . "\r\n";
 		$subject = 'Validate your new account at ' . $site_name;
-		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n\r\n" . $validate_url . '?email=' . $email . '&key=' . $key;
+		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n\r\n" . $validate_url . '?email=' . urlencode($email) . '&key=' . urlencode($key);
 
 		// Send email
 		@wp_mail(sanitize_email($email), $subject, $message, $headers);
