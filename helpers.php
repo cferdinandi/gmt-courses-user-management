@@ -354,7 +354,7 @@
 			$channels[] = $session->slack;
 		}
 
-		return empty($channels) ? $channels : array('channels' => implode(',', $channels));
+		return empty($channels) ? $channels : array('channel_ids' => implode(',', $channels));
 
 	}
 
