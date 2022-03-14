@@ -350,11 +350,11 @@
 		// Get Academy channels
 		$channels = array();
 		foreach($products['academy'] as $session) {
-			if ($session->completed) continue;
-			$channels[] = $session->slack;
+			if ($session['completed']) continue;
+			$channels[] = $session['slack'];
 		}
 
-		return empty($channels) ? $channels : array('channel_ids' => implode(',', $channels));
+		return empty($channels) ? $channels : array('channels' => implode(',', $channels));
 
 	}
 
