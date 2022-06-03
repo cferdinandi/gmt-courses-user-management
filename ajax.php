@@ -224,7 +224,8 @@
 		$products = gmt_courses_get_user_product_summary($username);
 
 		// If user hasn't made any purchases
-		if (empty($products) || (empty($products['guides'])  && empty($products['academy']) && empty($products['products']))) {
+		// if (empty($products) || (empty($products['guides'])  && empty($products['academy']) && empty($products['products']))) {
+		if (empty($products)) {
 			wp_send_json(array(
 				'code' => 400,
 				'status' => 'failed',
