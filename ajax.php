@@ -238,7 +238,8 @@
 
 			// Get validation key
 			$user = get_user_by('email', $username);
-			$validation = get_user_meta($user->ID, 'user_validation_key', true);
+			$user_id = $user->ID;
+			$validation = get_user_meta($user_id, 'user_validation_key', true);
 
 			// If not awaiting validation, throw an error
 			if (empty($validation)) {
@@ -264,7 +265,7 @@
 		// Create new user
 		if (empty($user)) {
 
-			$user = wp_create_user($username, $_POST['password'], $username);
+			$user_id = wp_create_user($username, $_POST['password'], $username);
 
 			// If account creation fails
 			if (is_wp_error($user)) {
@@ -275,7 +276,7 @@
 
 		// Add validation key
 		$validation_key =  wp_generate_password(48, false);
-		update_user_meta($user, 'user_validation_key', array(
+		update_user_meta($user_id, 'user_validation_key', array(
 			'key' => $validation_key,
 			'expires' => time() + (60 * 60 * 48)
 		));
