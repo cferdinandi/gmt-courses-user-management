@@ -13,9 +13,9 @@
 		// Variables
 		$site_name = get_bloginfo('name');
 		$domain = gmt_courses_get_site_domain();
-		$headers = 'From: Go Make Things <chris@gomakethings.com>' . "\r\n";
+		$headers = 'From: ' . $site_name . ' <' . get_option('admin_email') . '>' . "\r\n";
 		$subject = 'Your account was created for ' . $site_name;
-		$message = 'An account was created for ' . $email . ' at ' . $site_name . '. If you did not initiate this action, please email Chris at ' . gmt_courses_get_email() . '.';
+		$message = 'An account was created for ' . $email . ' at ' . $site_name . '. If you did not initiate this action, please email Chris at ' . get_option('admin_email') . '.';
 
 		// Send email
 		@wp_mail(sanitize_email($email), $subject, $message, $headers);
