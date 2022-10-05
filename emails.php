@@ -5,19 +5,17 @@
 
 
 	/**
-	 * Send validation email to a new user
+	 * Send account created email to a new user
 	 * @param  string $email The new user's email
-	 * @param  string $key   The new user's validation key
 	 */
-	function gmt_courses_send_validation_email ($email, $key) {
+	function gmt_courses_send_account_created_email ($email) {
 
 		// Variables
-		$validate_url = getenv('VALIDATE_URL');
 		$site_name = get_bloginfo('name');
 		$domain = gmt_courses_get_site_domain();
-		$headers = 'From: ' . $site_name . ' <donotreply@' . $domain . '>' . "\r\n";
-		$subject = 'Validate your new account at ' . $site_name;
-		$message = 'Please click the link below to validate your new account at ' . $site_name . '. If you did not try to create an account at ' . $site_name . ', ignore this email and nothing will happen.' . "\r\n\r\n" . $validate_url . '?email=' . urlencode($email) . '&key=' . urlencode($key);
+		$headers = 'From: Go Make Things <chris@gomakethings.com>' . "\r\n";
+		$subject = 'Your account was created for ' . $site_name;
+		$message = 'An account was created for ' . $email . ' at ' . $site_name . '. If you did not initiate this action, please email Chris at ' . gmt_courses_get_email() . '.';
 
 		// Send email
 		@wp_mail(sanitize_email($email), $subject, $message, $headers);

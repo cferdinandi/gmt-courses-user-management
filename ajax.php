@@ -205,11 +205,6 @@
 			return;
 		}
 
-		// Bail if user is already logged in
-		// if (is_user_logged_in()) {
-		// 	gmt_courses_already_logged_in_response();
-		// }
-
 		// Make sure email address is valid
 		$username = sanitize_email($_POST['username']);
 		if ($username !== $_POST['username']) {
@@ -224,7 +219,6 @@
 		$products = gmt_courses_get_user_product_summary($username);
 
 		// If user hasn't made any purchases
-		// if (empty($products) || (empty($products['guides'])  && empty($products['academy']) && empty($products['products']))) {
 		if (empty($products)) {
 			wp_send_json(array(
 				'code' => 400,
@@ -233,23 +227,13 @@
 			), 400);
 		}
 
-		// If username already exists and is validated
+		// If username already exists, throw an error
 		if (username_exists($username)) {
-
-			// Get validation key
-			$user = get_user_by('email', $username);
-			$user_id = $user->ID;
-			$validation = get_user_meta($user_id, 'user_validation_key', true);
-
-			// If not awaiting validation, throw an error
-			if (empty($validation)) {
-				wp_send_json(array(
-					'code' => 400,
-					'status' => 'failed',
-					'message' => 'An account already exists for this email address. If you need to reset your password, please email ' . gmt_courses_get_email() . '.'
-				), 400);
-			}
-
+			wp_send_json(array(
+				'code' => 400,
+				'status' => 'failed',
+				'message' => 'An account already exists for this email address. If you need to reset your password, please email ' . gmt_courses_get_email() . '.'
+			), 400);
 		}
 
 		// Enforce password security
@@ -263,100 +247,35 @@
 		}
 
 		// Create new user
-		if (empty($user)) {
+		$user_id = wp_create_user($username, $_POST['password'], $username);
 
-			$user_id = wp_create_user($username, $_POST['password'], $username);
-
-			// If account creation fails
-			if (is_wp_error($user)) {
-				gmt_courses_internal_error_response();
-			}
-
+		// If account creation fails, throw an error
+		if (is_wp_error($user_id)) {
+			gmt_courses_internal_error_response();
 		}
 
-		// Add validation key
-		$validation_key =  wp_generate_password(48, false);
-		update_user_meta($user_id, 'user_validation_key', array(
-			'key' => $validation_key,
-			'expires' => time() + (60 * 60 * 48)
-		));
+		// Send success email
+		gmt_courses_send_account_created_email($username);
 
-		// Send validation email
-		gmt_courses_send_validation_email($username, $validation_key);
+		// Log user in
+		$credentials = array(
+			'user_login' => $username,
+			'user_password' => $_POST['password'],
+			'remember' => true,
+		);
+		wp_signon($credentials);
 
 		// Respond with success
+		$frontend_url = getenv('FRONTEND_URL');
 		wp_send_json(array(
 			'code' => 200,
 			'status' => 'success',
-			'message' => 'Your account has been created! You were just sent a verification email. Please validate your account within the next 48 hours to complete your registration. If you don\'t receive an email, please email ' . gmt_courses_get_email() . '.',
+			'message' => 'Your account has been created! If you\'re not automatically redirected to the dashboard, <a href="' . $frontend_url . '">click here</a>.',
 		), 200);
 
 	}
 	add_action('wp_ajax_gmt_courses_create_user', 'gmt_courses_create_user');
 	add_action('wp_ajax_nopriv_gmt_courses_create_user', 'gmt_courses_create_user');
-
-
-	/**
-	 * Validate a new user account
-	 */
-	function gmt_courses_validate_new_account () {
-
-		// Bail if not an Ajax request
-		if (gmt_courses_is_not_ajax()) {
-			header('Location: ' . $_SERVER['HTTP_REFERER']);
-			return;
-		}
-
-		// Bail if user is already logged in
-		if (is_user_logged_in()) {
-			gmt_courses_already_logged_in_response();
-		}
-
-		// Variables
-		$user = get_user_by('email', $_POST['username']);
-		$validation = get_user_meta($user->ID, 'user_validation_key', true);
-		$signup_url = getenv('SIGNUP_URL');
-
-		// If user exists but there's no validation key, let them know account already verified
-		if (!empty($user) && empty($validation)) {
-			wp_send_json(array(
-				'code' => 400,
-				'status' => 'failed',
-				'message' => 'This account has already been validated. <a href="/">Please login</a> to access your courses. If you don\'t know your password or feel this is an error, please email ' . gmt_courses_get_email() . '.'
-			), 400);
-		}
-
-		// If validation fails
-		if (empty($user) || empty($validation) || strcmp($_POST['key'], $validation['key']) !== 0) {
-			wp_send_json(array(
-				'code' => 400,
-				'status' => 'failed',
-				'message' => 'This validation link is not valid. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
-			), 400);
-		}
-
-		// If validation key has expired, ask them to try again
-		if (time() > $validation['expires']) {
-			wp_send_json(array(
-				'code' => 400,
-				'status' => 'failed',
-				'message' => 'This validation link has expired. Please <a href="' . $signup_url . '">try creating an account again</a>. If you feel this was in error, please email ' . gmt_courses_get_email() . '.'
-			), 400);
-		}
-
-		// Remove the validation key
-		delete_user_meta($user->ID, 'user_validation_key');
-
-		// Send success data
-		wp_send_json(array(
-			'code' => 200,
-			'status' => 'success',
-			'message' => 'Your account was successfully validated. <a href="/login">Please login</a> to access your courses.'
-		), 200);
-
-	};
-	add_action('wp_ajax_gmt_courses_validate_new_account', 'gmt_courses_validate_new_account');
-	add_action('wp_ajax_nopriv_gmt_courses_validate_new_account', 'gmt_courses_validate_new_account');
 
 
 	/**
