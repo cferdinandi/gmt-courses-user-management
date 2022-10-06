@@ -129,17 +129,8 @@
 			wp_logout();
 		}
 
-		// Make sure account has been validated
-		$user = get_user_by('email', $_POST['username']);
-		if (!empty(get_user_meta($user->ID, 'user_validation_key', true))) {
-			wp_send_json(array(
-				'code' => 400,
-				'status' => 'failed',
-				'message' => 'Please validate your account using the link in the email that was sent to you. If you never received a validation link, please email ' . gmt_courses_get_email() . '.'
-			), 400);
-		}
-
 		// Authenticate User
+		$user = get_user_by('email', $_POST['username']);
 		$credentials = array(
 			'user_login' => $user->user_email,
 			'user_password' => $_POST['password'],
