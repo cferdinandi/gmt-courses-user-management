@@ -241,7 +241,7 @@
 
 		// Get purchased pocket guides
 		foreach($product_data->guides as $key => $guide) {
-			if (in_array($guide->id, $purchases)) {
+			if (!empty(array_intersect(array($guide->id . '_1', $guide->id . '_2', $guide->id . '_3'), $purchases))) {
 				$products['guides'][] = array(
 					'id' => $guide->id,
 					'title' => $guide->title,
@@ -311,7 +311,8 @@
 		$product_data = json_decode(file_get_contents(realpath(ABSPATH . DIRECTORY_SEPARATOR . '..') . '/' . trim($api_dir, '/') . '/index.json'), false);
 
 		// Make sure user has access to purchase
-		if (!in_array($product_data->id, $purchases) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
+		$has_product = $type === 'guides' ? array_intersect(array($product_data->id . '_1', $product_data->id . '_2', $product_data->id . '_3'), $purchases) : in_array($product_data->id, $purchases);
+		if (empty($has_product) && (empty($product_data->monthly) || !in_array($product_data->monthly, $purchases))) return;
 
 		// If not pocket guides
 		if ($type !== 'guides') {
@@ -322,8 +323,8 @@
 
 		// If a Pocket Guide
 		if ($type === 'guides') {
-			$has_book = array_intersect(array($product_data->id . '_1', $product_data->id . '_3', $product_data->id . '_4', $product_data->id . '_6'), $purchases);
-			$has_video = array_intersect(array($product_data->id . '_2', $product_data->id . '_3', $product_data->id . '_5', $product_data->id . '_6'), $purchases);
+			$has_book = array_intersect(array($product_data->id . '_1', $product_data->id . '_3'), $purchases);
+			$has_video = array_intersect(array($product_data->id . '_2', $product_data->id . '_3'), $purchases);
 			return array(
 				'id' => $product_data->id,
 				'title' => $product_data->title,
@@ -331,6 +332,8 @@
 				'sourceCode' => $product_data->sourceCode,
 				'lessons' => ($has_video ? $product_data->lessons : null),
 				'assets' => ($has_book ? $product_data->assets : null),
+				'has_book' => $has_book,
+				'has_video' => $has_video,
 			);
 		}
 
